@@ -80,7 +80,7 @@ window.MathJax = {
   <p><span class="label">Theorem 1 (Fourier spikes are necessary but not sufficient).</span></p>
   <ol>
     <li><strong>Necessity.</strong> If $\Phi_T = 0$, then $S_B = 0$, and no linear probe can classify $n \bmod T$ above chance.</li>
-    <li><strong>Insufficiency.</strong> For any $T \ge 2$, any $C > 0$, any $\eta > 0$, and any $N$ divisible by $T$ with $N \ge 2T$, there exist embeddings with $\Phi_T > C$ but Fisher discriminant $\lambda_{\max}(S_W^{-1} S_B) < \eta$. In other words, the Fourier spike can be arbitrarily large while mod-$T$ classes remain linearly inseparable.</li>
+    <li><strong>Insufficiency.</strong> For any $T \ge 2$, any $C > 0$, and any $\varepsilon > 0$, there exist $N$ divisible by $T$ and embeddings $e(n)$ with $\Phi_T > C$ such that no $T$-class linear classifier achieves accuracy above $1/T + \varepsilon$. In other words, the Fourier spike can be arbitrarily large while linear probes do no better than random guessing by more than $\varepsilon$.</li>
   </ol>
 </div>
 
@@ -88,15 +88,15 @@ window.MathJax = {
 
 <h3>The counterexample, in pictures</h3>
 
-<p>Every number $n \in \{0, \dots, N-1\}$ decomposes uniquely as $n = r + mT$ with residue $r \in \{0, \dots, T-1\}$ and block index $m \in \{0, \dots, K-1\}$ where $K = N/T$. Pick two vectors $A$ and $M$ and set</p>
+<p>Every number $n \in \{0, \dots, N-1\}$ decomposes uniquely as $n = r + mT$ with residue $r \in \{0, \dots, T-1\}$ and block index $m \in \{0, \dots, K-1\}$ where $K = N/T$. Pick two vectors $A$ and $B$ and set</p>
 
-<p>$$e(n) = A r + M m.$$</p>
+<p>$$e(n) = A r + B m.$$</p>
 
-<p>The term $Ar$ encodes the residue and contributes to $S_B$ (and therefore to $\Phi_T$). The term $Mm$ varies within each residue class and contributes only to $S_W$. The two pieces live on independent axes, so scaling $\|M\|$ moves the embeddings along a direction that is invisible to the Fourier spike but arbitrarily large in the within-class scatter.</p>
+<p>The term $Ar$ encodes the residue and contributes to $S_B$ (and therefore to $\Phi_T$). The term $Bm$ varies within each residue class and contributes only to $S_W$. The two pieces live on independent axes, so scaling $\|B\|$ moves the embeddings along a direction that is invisible to the Fourier spike but arbitrarily large in the within-class scatter.</p>
 
 <figure>
   <img src="images/part_ii_figure.png" alt="Counterexample to the sufficiency direction of Theorem 1" />
-  <figcaption><strong>Counterexample construction (Theorem 1, part ii).</strong> Fixing $A$ produces a persistent Fourier spike at period $T$ regardless of $M$. When $\|M\|$ is small, residue classes cluster into linearly separable groups. As $\|M\|$ grows, the embeddings interleave across classes, so $\lambda_{\max}(S_W^{-1} S_B)$ becomes arbitrarily small while $\Phi_T$ stays unchanged.</figcaption>
+  <figcaption><strong>Counterexample construction (Theorem 1, part ii).</strong> Fixing $A$ produces a persistent Fourier spike at period $T$ regardless of $B$. When $\|B\|$ is small, residue classes cluster into linearly separable groups. As $\|B\|$ grows, the embeddings interleave across classes, and the best linear classifier accuracy approaches the random-guessing baseline $1/T$, all while $\Phi_T$ stays unchanged.</figcaption>
 </figure>
 
 <p>The paper also gives matching Fisher-discriminant bounds that sharpen the picture:</p>
