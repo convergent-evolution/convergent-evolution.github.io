@@ -25,6 +25,8 @@ window.MathJax = {
 </head>
 <body>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="sealThicken"><feMorphology operator="dilate" radius="0.5"/></filter></svg>
+
 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle light / dark">🌓</button>
 
 <div class="container">
@@ -34,7 +36,17 @@ window.MathJax = {
 <header class="hero">
   <span class="eyebrow">Blog post · April 2026</span>
   <h1 class="paper-title">Convergent Evolution in Number Representations</h1>
-  <p class="paper-subtitle">Deqing Fu, Tianyi Zhou, Mikhail Belkin, Vatsal Sharan, Robin Jia</p>
+  <div class="authors" style="margin-bottom: 4px;">
+    <a class="author" href="https://deqingfu.github.io"><strong>Deqing Fu</strong><span class="seal usc-seal" aria-label="USC"></span></a>
+    <a class="author" href="https://kevinzhoutianyi.github.io"><strong>Tianyi Zhou</strong><span class="seal usc-seal" aria-label="USC"></span></a>
+    <a class="author" href="https://misha.belkin-wang.org"><strong>Mikhail Belkin</strong><span class="seal ucsd-seal" aria-label="UCSD"></span></a>
+    <a class="author" href="https://vatsalsharan.github.io"><strong>Vatsal Sharan</strong><span class="seal usc-seal" aria-label="USC"></span></a>
+    <a class="author" href="https://robinjia.github.io"><strong>Robin Jia</strong><span class="seal usc-seal" aria-label="USC"></span></a>
+  </div>
+  <div class="affil">
+    <span class="seal usc-seal" aria-label="USC"></span> University of Southern California &nbsp;·&nbsp;
+    <span class="seal ucsd-seal" aria-label="UCSD"></span> UC San Diego
+  </div>
   <div class="links">
     <a class="primary" href="https://arxiv.org/abs/XXXX.XXXXX">📄 arXiv</a>
     <a href="index.html">🏠 Project page</a>
@@ -53,9 +65,9 @@ window.MathJax = {
   <figcaption>Every model we checked develops the same <em>T</em> = 2, 5, 10 spikes. So does the raw number-token frequency distribution, with no model at all.</figcaption>
 </figure>
 
-<p>Every system showed the same spikes. Including, amusingly, the raw frequency distribution of number tokens in text. You do not need a model. Numbers like 10, 20, 30, 100 simply appear more often than 17, 23, 41, and the Fourier transform of that histogram already lights up at periods 2, 5, and 10.</p>
+<p>Every system showed the same spikes. The shared trait is not a deep architectural property; it is a consequence of how numbers are distributed in text. We will see in a moment that even the raw number-token frequency distribution, with no model at all, has the same spikes.</p>
 
-<blockquote>If the raw token distribution already has the signature, what exactly are we measuring when we see it in a trained model?</blockquote>
+<blockquote>If a quantity that any reasonable model would inherit from training data already has the signature, what exactly are we measuring when we see it in a trained model?</blockquote>
 
 <h2>Spectral vs. geometric convergence</h2>
 
@@ -74,7 +86,13 @@ window.MathJax = {
 
 <p>$$F_\nu = \tfrac{1}{\sqrt{N}} \sum_{n=0}^{N-1} e(n) \, e^{-2\pi i \nu n}, \qquad \Phi_T = \sum_{\ell=1}^{T-1} \|F_{\ell/T}\|^2,$$</p>
 
-<p>so $\Phi_T$ is the total Fourier power at harmonics of period $T$. Let $S_B$ and $S_W$ be the between- and within-class scatter matrices of the residue classes.</p>
+<p>so $\Phi_T$ is the total Fourier power at the harmonics of period $T$.</p>
+
+<p>To talk about how the embeddings are arranged geometrically, we need two standard quantities from linear discriminant analysis. Let $\mu_r = \tfrac{1}{|C_r|} \sum_{n \in C_r} e(n)$ be the mean embedding of residue class $r$, and let $\mu = \tfrac{1}{N} \sum_n e(n)$ be the grand mean. The <strong>between-class scatter</strong> $S_B$ measures how spread apart the class means are, and the <strong>within-class scatter</strong> $S_W$ measures how spread out the embeddings are around their own class mean:</p>
+
+<p>$$S_B = \tfrac{1}{T} \sum_{r=0}^{T-1} (\mu_r - \mu)(\mu_r - \mu)^\top, \qquad S_W = \tfrac{1}{N} \sum_{r=0}^{T-1} \sum_{n \in C_r} (e(n) - \mu_r)(e(n) - \mu_r)^\top.$$</p>
+
+<p>Linear separability of the residue classes is governed by how large $S_B$ is relative to $S_W$. If the class means are far apart (large $S_B$) and the within-class clouds are tight (small $S_W$), a linear probe works well. If the class means coincide ($S_B = 0$) or the within-class clouds dwarf the gap between means, no linear probe can do better than chance.</p>
 
 <div class="theorem">
   <p><span class="label">Theorem 1 (Fourier spikes are necessary but not sufficient).</span></p>
@@ -92,11 +110,11 @@ window.MathJax = {
 
 <p>$$e(n) = A r + B m.$$</p>
 
-<p>The term $Ar$ encodes the residue and contributes to $S_B$ (and therefore to $\Phi_T$). The term $Bm$ varies within each residue class and contributes only to $S_W$. The two pieces live on independent axes, so scaling $\|B\|$ moves the embeddings along a direction that is invisible to the Fourier spike but arbitrarily large in the within-class scatter.</p>
+<p>The term $Ar$ encodes the residue and contributes to $S_B$ (and therefore to $\Phi_T$). The term $Bm$ varies within each residue class and contributes only to $S_W$. The two pieces live on independent axes, so scaling $B$ moves the embeddings along a direction that is invisible to the Fourier spike but arbitrarily large in the within-class scatter.</p>
 
 <figure>
   <img src="images/part_ii_figure.png" alt="Counterexample to the sufficiency direction of Theorem 1" />
-  <figcaption><strong>Counterexample construction (Theorem 1, part ii).</strong> Fixing $A$ produces a persistent Fourier spike at period $T$ regardless of $B$. When $\|B\|$ is small, residue classes cluster into linearly separable groups. As $\|B\|$ grows, the embeddings interleave across classes, and the best linear classifier accuracy approaches the random-guessing baseline $1/T$, all while $\Phi_T$ stays unchanged.</figcaption>
+  <figcaption><strong>Counterexample construction (Theorem 1, part ii).</strong> Fixing $A$ produces a persistent Fourier spike at period $T$ regardless of $B$. When $B$ is small, residue classes cluster into linearly separable groups. As $B$ grows, the embeddings interleave across classes, and the best linear classifier accuracy approaches the random-guessing baseline $1/T$, all while $\Phi_T$ stays unchanged.</figcaption>
 </figure>
 
 <p>The paper also gives matching Fisher-discriminant bounds that sharpen the picture:</p>
@@ -112,7 +130,7 @@ window.MathJax = {
 
 <h2>What separates the two? Controlled 300M-parameter runs</h2>
 
-<p>To isolate what drives geometric convergence, we trained 300M-parameter models from scratch on 10B tokens of FineWeb-Edu under tightly controlled conditions. We varied three axes: <strong>data</strong>, <strong>architecture</strong>, and <strong>optimizer</strong>.</p>
+<p>To isolate what drives geometric convergence, we trained 300M-parameter models from scratch on 10B tokens of FineWeb-Edu under tightly controlled conditions, varying <strong>data</strong>, <strong>architecture</strong>, and <strong>optimizer</strong> one factor at a time. Two of these axes have figures in the blog; for the optimizer story, see the paper.</p>
 
 <h3>Data: which co-occurrence signals matter?</h3>
 
@@ -136,9 +154,6 @@ window.MathJax = {
 
 <p>Holding data and compute constant, Transformers and Gated DeltaNet (a linear RNN) learn geometrically separable mod-<em>T</em> features. LSTMs sit near chance on the probe, even though their Fourier spikes are as visible as the Transformer's. This is the cleanest demonstration we have that Fourier spikes are a misleading proxy: a model can wear the costume without having the geometry underneath.</p>
 
-<h3>Optimizer: Muon vs. AdamW</h3>
-
-<p>Muon and AdamW produce similar Fourier spectra across architectures, but probing accuracy varies across optimizer choices. The optimizer is not a cosmetic choice at the representation level.</p>
 
 <h2>A second route: arithmetic training</h2>
 
@@ -183,6 +198,22 @@ window.MathJax = {
 
 <p>More broadly, we think the spectral/geometric distinction is a useful template for interpretability. As we increasingly rely on representation-level diagnostics to understand large models, it matters to distinguish visible structure from functional structure. They are not the same thing.</p>
 
+<h2>Related work</h2>
+
+<p style="font-size: 0.92rem; color: var(--muted); margin-top: -8px;">Click any citation to see the full title, authors, and venue.</p>
+
+<p><strong>Fourier features in number embeddings.</strong> <a class="cite" href="https://openreview.net/forum?id=i4MutM2TZb" data-title="Pre-trained Large Language Models Use Fourier Features to Compute Addition" data-authors="Tianyi Zhou, Deqing Fu, Vatsal Sharan, Robin Jia" data-venue="NeurIPS 2024">Zhou et al. (2024)</a> first showed that pretrained Transformers represent integer tokens with Fourier components and that addition is implemented through Fourier-domain circuits. <a class="cite" href="https://aclanthology.org/2025.naacl-short" data-title="Language models encode numbers using digit representations in base 10" data-authors="Amit Arnold Levy, Mor Geva" data-venue="NAACL 2025 (Short Papers)">Levy and Geva (2025)</a> document related digit-base periodic structure in intermediate representations, and <a class="cite" href="https://arxiv.org/abs/2502.00873" data-title="Language Models Use Trigonometry to Do Addition" data-authors="Subhash Kantamneni, Max Tegmark" data-venue="arXiv:2502.00873, 2025">Kantamneni and Tegmark (2025)</a> and <a class="cite" href="https://openreview.net/forum?id=i4MutM2TZb" data-title="Pre-trained Large Language Models Use Fourier Features to Compute Addition" data-authors="Tianyi Zhou, Deqing Fu, Vatsal Sharan, Robin Jia" data-venue="NeurIPS 2024">Zhou et al. (2024)</a> identify trigonometric circuits used in addition. <a class="cite" href="https://arxiv.org/abs/2502.09741" data-title="FoNE: Precise single-token number embeddings via Fourier features" data-authors="Tianyi Zhou, Deqing Fu, Mahdi Soltanolkotabi, Robin Jia, Vatsal Sharan" data-venue="arXiv:2502.09741, 2025">Zhou et al. (2025, FoNE)</a> show that hard-coding Fourier number embeddings improves arithmetic learning. Earlier, <a class="cite" href="https://arxiv.org/abs/2402.09469" data-title="Fourier Circuits in Neural Networks: Unlocking the Potential of Large Language Models in Mathematical Reasoning and Modular Arithmetic" data-authors="Jiuxiang Gu, Chenyang Li, Yingyu Liang, Zhenmei Shi, Zhao Song, Tianyi Zhou" data-venue="arXiv:2402.09469, 2024">Gu et al. (2024)</a> analyzed Fourier circuits in modular arithmetic. Cyclic representations have also been observed for non-numerical concepts such as days of the week and months of the year (<a class="cite" href="https://openreview.net/forum?id=d63a4AM4hb" data-title="Not All Language Model Features Are One-Dimensionally Linear" data-authors="Joshua Engels, Eric J. Michaud, Isaac Liao, Wes Gurnee, Max Tegmark" data-venue="ICLR 2025">Engels et al., 2025</a>; <a class="cite" href="https://arxiv.org/abs/2602.15029" data-title="Symmetry in language statistics shapes the geometry of model representations" data-authors="Dhruva Karkada, Daniel J. Korchinski, Andres Nava, Matthieu Wyart, Yasaman Bahri" data-venue="arXiv:2602.15029, 2026">Karkada et al., 2026</a>). These works document spectral structure; we show this structure does <em>not</em> by itself imply geometric (linear) separability of mod-$T$ classes, and identify what does.</p>
+
+<p><strong>Modular arithmetic and grokking.</strong> Transformers trained on modular addition learn to embed numbers on a circle and rotate to compute the answer (<a class="cite" href="https://openreview.net/forum?id=9XFSbDPmdW" data-title="Progress measures for grokking via mechanistic interpretability" data-authors="Neel Nanda, Lawrence Chan, Tom Lieberum, Jess Smith, Jacob Steinhardt" data-venue="ICLR 2023">Nanda et al., 2023</a>; <a class="cite" href="#" data-title="The clock and the pizza: Two stories in mechanistic explanation of neural networks" data-authors="Ziqian Zhong, Ziming Liu, Max Tegmark, Jacob Andreas" data-venue="NeurIPS 2023">Zhong et al., 2023</a>; <a class="cite" href="https://arxiv.org/abs/2301.02679" data-title="Grokking modular arithmetic" data-authors="Andrey Gromov" data-venue="arXiv:2301.02679, 2023">Gromov, 2023</a>; <a class="cite" href="https://arxiv.org/abs/2201.02177" data-title="Grokking: Generalization beyond overfitting on small algorithmic datasets" data-authors="Alethea Power, Yuri Burda, Harri Edwards, Igor Babuschkin, Vedant Misra" data-venue="arXiv:2201.02177, 2022">Power et al., 2022</a>). In our 9-digit addition setting, the multi-token output forces a mod-1000 subproblem at every position, so circular structure emerges <em>without</em> a modular-arithmetic objective being explicitly imposed.</p>
+
+<p><strong>Linear representation hypothesis and probing.</strong> The linear representation hypothesis (<a class="cite" href="https://openreview.net/forum?id=T0PoOJg8cK" data-title="The Linear Representation Hypothesis and the Geometry of Large Language Models" data-authors="Kiho Park, Yo Joong Choe, Victor Veitch" data-venue="NeurIPS Causal Representation Learning Workshop, 2023">Park et al., 2023</a>) conjectures that high-level concepts should be linearly decodable from model representations; probing (e.g. <a class="cite" href="https://openreview.net/forum?id=KRnsX5Em3W" data-title="LLMs Know More Than They Show: On the Intrinsic Representation of LLM Hallucinations" data-authors="Hadas Orgad, Michael Toker, Zorik Gekhman, Roi Reichart, Idan Szpektor, Hadas Kotek, Yonatan Belinkov" data-venue="ICLR 2025">Orgad et al., 2025</a>) is the standard test. For cyclic concepts, our results show that linear decodability is a strictly stronger property than the spectral diagnostics prior work has often used as a stand-in.</p>
+
+<p><strong>Convergence of representations across models.</strong> The Platonic Representation Hypothesis (<a class="cite" href="https://proceedings.mlr.press/v235/huh24a.html" data-title="Position: The Platonic Representation Hypothesis" data-authors="Minyoung Huh, Brian Cheung, Tongzhou Wang, Phillip Isola" data-venue="ICML 2024">Huh et al., 2024</a>) argues that representations across models and modalities are converging toward a shared statistical model of reality, measured via global kernel alignment. We ask a different question: when models converge on a similar representation of one <em>specific</em> concept (numbers), have they learned the same functional structure? Often, no.</p>
+
+<p><strong>Controlled studies of pretraining.</strong> <a class="cite" href="https://arxiv.org/abs/2512.17351" data-title="Physics of Language Models: Part 4.1, Architecture design and the magic of Canon layers" data-authors="Zeyuan Allen-Zhu" data-venue="arXiv:2512.17351, 2025">Allen-Zhu (2025)</a> uses controlled synthetic pretraining to isolate which capabilities emerge from which architectural and data choices. Our perturbations (<code>Swap Numbers</code>, <code>Unigram Replace</code>, <code>Isolate-k</code>, <code>ContextLength-</code>$\ell$) follow the same spirit, applied to natural pretraining data and aimed at the level of <em>representations</em> rather than capabilities.</p>
+
+<p><strong>Attribution.</strong> Influence functions (<a class="cite" href="https://proceedings.mlr.press/v70/koh17a.html" data-title="Understanding Black-box Predictions via Influence Functions" data-authors="Pang Wei Koh, Percy Liang" data-venue="ICML 2017">Koh and Liang, 2017</a>; <a class="cite" href="https://arxiv.org/abs/2308.03296" data-title="Studying Large Language Model Generalization with Influence Functions" data-authors="Roger Grosse, Juhan Bae, Cem Anil, Nelson Elhage, Alex Tamkin, Amirhossein Tajdini, Benoit Steiner, Dustin Li, Esin Durmus, Ethan Perez, et al." data-venue="arXiv:2308.03296, 2023">Grosse et al., 2023</a>) and Data Shapley (<a class="cite" href="#" data-title="Data Shapley: Equitable Valuation of Data for Machine Learning" data-authors="Amirata Ghorbani, James Zou" data-venue="ICML 2019">Ghorbani and Zou, 2019</a>) attribute model <em>predictions</em> to individual training examples. Our controlled perturbations are an analogue at the level of <em>representations</em>: they attribute emergent features to specific structural properties of the training distribution.</p>
+
 <h2>Resources</h2>
 <ul>
   <li>📄 <a href="https://arxiv.org/abs/XXXX.XXXXX">Paper on arXiv</a></li>
@@ -197,6 +228,52 @@ window.MathJax = {
 </div>
 
 <script>
+  // Citation popover (anthropic-style)
+  (function() {
+    var popover = null;
+    function close() {
+      if (popover) { popover.remove(); popover = null; }
+    }
+    function escape(s) {
+      return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    document.addEventListener('click', function(e) {
+      var a = e.target.closest('a.cite');
+      if (a && a.dataset.title) {
+        e.preventDefault();
+        close();
+        popover = document.createElement('div');
+        popover.className = 'cite-popover visible';
+        var href = a.getAttribute('href');
+        var linkHTML = (href && href !== '#')
+          ? '<a class="cite-link" href="' + escape(href) + '" target="_blank" rel="noopener">Open ↗</a>'
+          : '';
+        popover.innerHTML =
+          '<p class="cite-title">' + escape(a.dataset.title) + '</p>' +
+          '<p class="cite-authors">' + escape(a.dataset.authors || '') + '</p>' +
+          '<p class="cite-venue">' + escape(a.dataset.venue || '') + '</p>' +
+          linkHTML;
+        document.body.appendChild(popover);
+        var r = a.getBoundingClientRect();
+        var top = window.scrollY + r.bottom + 6;
+        var left = window.scrollX + r.left;
+        var pw = popover.offsetWidth;
+        if (left + pw > window.scrollX + window.innerWidth - 12) {
+          left = window.scrollX + window.innerWidth - pw - 12;
+        }
+        popover.style.top = top + 'px';
+        popover.style.left = Math.max(window.scrollX + 12, left) + 'px';
+        return;
+      }
+      if (popover && !e.target.closest('.cite-popover')) close();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') close();
+    });
+    window.addEventListener('scroll', close, { passive: true });
+    window.addEventListener('resize', close);
+  })();
+
   var btn = document.getElementById('themeToggle');
   function current() {
     var explicit = document.documentElement.getAttribute('data-theme');

@@ -133,14 +133,51 @@ h1.paper-title {
   margin: -8px auto 20px;
 }
 
-.authors { font-size: 1rem; margin: 10px 0 4px; }
-.authors span.author { white-space: nowrap; margin: 0 4px; }
-.affil { color: var(--muted); font-size: 0.92rem; margin-top: 2px; }
+.authors { font-size: 1.2rem; margin: 14px 0 6px; line-height: 1.5; }
+.authors span.author { white-space: nowrap; margin: 0 6px; }
+.affil { color: var(--muted); font-size: 1.05rem; margin-top: 4px; }
 
 .usc { color: #c04040; font-weight: 700; }
 .ucsd { color: #5582c8; font-weight: 700; }
 html[data-theme="light"] .usc, html:not([data-theme]) .usc { color: #990000; }
 html[data-theme="light"] .ucsd, html:not([data-theme]) .ucsd { color: #182B49; }
+
+.seal {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  vertical-align: super;
+  margin: 0 1px 0 3px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+.seal.usc-seal {
+  background-image: url('images/logo/usc_seal_red.svg');
+}
+.seal.ucsd-seal {
+  background-image: url('images/logo/ucsd_seal.svg');
+}
+.affil .seal { width: 24px; height: 24px; vertical-align: -6px; margin-right: 6px; }
+
+.authors a.author {
+  color: var(--fg);
+  text-decoration: none;
+  margin: 0 4px;
+  white-space: nowrap;
+  border-bottom: 1px dotted var(--soft);
+}
+.authors a.author:hover {
+  color: var(--fg);
+  text-decoration: none;
+  border-bottom-color: var(--fg);
+}
 
 .links {
   display: flex;
@@ -428,6 +465,49 @@ footer {
 .dissoc .yes .tag { background: color-mix(in srgb, #2a8f4a 15%, transparent); color: #2a8f4a; }
 .dissoc .no  .tag { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
 @media (max-width: 640px) { .dissoc { grid-template-columns: 1fr; } }
+
+/* Citation popover (anthropic-style) */
+a.cite {
+  position: relative;
+  cursor: pointer;
+}
+.cite-popover {
+  position: absolute;
+  z-index: 200;
+  background: var(--card2);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 16px 40px rgba(0,0,0,0.10);
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.12s, transform 0.12s;
+}
+.cite-popover.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.cite-popover .cite-title { font-weight: 600; margin: 0 0 4px; color: var(--fg); }
+.cite-popover .cite-authors { color: var(--muted); margin: 0 0 4px; }
+.cite-popover .cite-venue { color: var(--soft); font-style: italic; margin: 0 0 8px; }
+.cite-popover .cite-link {
+  display: inline-block;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+}
+.cite-popover .cite-link:hover { opacity: 0.85; text-decoration: none; }
 
 /* Theorem / definition boxes for blog */
 .theorem, .definition {
