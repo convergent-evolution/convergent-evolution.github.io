@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Convergent Evolution in Number Representations · Blog Post</title>
+<meta name="description" content="An informal walkthrough of our paper on how diverse language models converge to similar number representations, and why Fourier spikes are a weak proxy for understanding." />
+<link rel="stylesheet" href="style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  (function() {
+    var saved = localStorage.getItem('theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+  })();
+</script>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle light / dark">🌓</button>
+
+<div class="container">
+
+<a class="back-link" href="index.html">← Back to project page</a>
+
+<header class="hero">
+  <span class="eyebrow">Blog post · April 2026</span>
+  <h1 class="paper-title">Convergent Evolution in Number Representations</h1>
+  <p class="paper-subtitle">Deqing Fu, Tianyi Zhou, Mikhail Belkin, Vatsal Sharan, Robin Jia</p>
+  <div class="links">
+    <a class="primary" href="https://arxiv.org/abs/XXXX.XXXXX">📄 arXiv</a>
+    <a href="index.html">🏠 Project page</a>
+    <a href="https://hf.co/collections/deqing/convergent-evolution">🤗 Models</a>
+  </div>
+</header>
+
+<h2>A suspiciously universal pattern</h2>
+
+<p>A growing body of interpretability work has found that language models represent numbers using <em>periodic features</em>. Take the embedding of each integer token, run a discrete Fourier transform over the sequence of embeddings, and you reliably see spikes at periods <em>T</em> = 2, 5, 10. This has been observed in GPT-2, Llama, and other Transformers, and interpreted as evidence that next-token prediction teaches models something structural about numbers.</p>
+
+<p>We started with a simple question: how far does this generalize? So we looked at almost everything we could get our hands on. Transformers of many scales (GPT-2, GPT-OSS, Llama-3, Llama-4, DeepSeek-V3), non-Transformer LLMs (Mamba, Falcon-Mamba, xLSTM, Kimi-Linear), and classical word embeddings (GloVe, FastText).</p>
+
+<figure>
+  <img src="images/fourier_universality.png" alt="Fourier spectra across many model families" />
+  <figcaption>Every model we checked develops the same <em>T</em> = 2, 5, 10 spikes. So does the raw number-token frequency distribution, with no model at all.</figcaption>
+</figure>
+
+<p>Every system showed the same spikes. Including, amusingly, the raw frequency distribution of number tokens in text. You do not need a model. Numbers like 10, 20, 30, 100 simply appear more often than 17, 23, 41, and the Fourier transform of that histogram already lights up at periods 2, 5, and 10.</p>
+
+<blockquote>If the raw token distribution already has the signature, what exactly are we measuring when we see it in a trained model?</blockquote>
+
+<h2>Spectral vs. geometric convergence</h2>
+
+<p>This motivates a distinction we make throughout the paper.</p>
+
+<ul>
+  <li><strong>Spectral convergence.</strong> The embedding has Fourier spikes at the expected periods.</li>
+  <li><strong>Geometric convergence.</strong> The embedding actually encodes <em>n</em> mod <em>T</em> as a linearly decodable quantity. A linear probe (we report Cohen's κ, which corrects for chance) can classify numbers by their residue mod 2, 5, or 10.</li>
+</ul>
+
+<p>The first is a statement about the spectrum. The second is a statement about geometry: period-<em>T</em> structure is only useful if numbers sharing the same residue cluster together in embedding space.</p>
+
+<h2>A theorem: spikes are necessary but not sufficient</h2>
+
+<p>The main theoretical result in the paper formalizes this gap. Let $\{e(n)\}_{n=0}^{N-1}$ be the embeddings of numbers 0 through $N-1$, and let $C_r = \{n : n \equiv r \pmod T\}$ be the mod-$T$ residue classes. Define the discrete Fourier transform</p>
+
+<p>$$F_\nu = \tfrac{1}{\sqrt{N}} \sum_{n=0}^{N-1} e(n) \, e^{-2\pi i \nu n}, \qquad \Phi_T = \sum_{\ell=1}^{T-1} \|F_{\ell/T}\|^2,$$</p>
+
+<p>so $\Phi_T$ is the total Fourier power at harmonics of period $T$. Let $S_B$ and $S_W$ be the between- and within-class scatter matrices of the residue classes.</p>
+
+<div class="theorem">
+  <p><span class="label">Theorem 1 (Fourier spikes are necessary but not sufficient).</span></p>
+  <ol>
+    <li><strong>Necessity.</strong> If $\Phi_T = 0$, then $S_B = 0$, and no linear probe can classify $n \bmod T$ above chance.</li>
+    <li><strong>Insufficiency.</strong> For any $T \ge 2$, any $C > 0$, any $\eta > 0$, and any $N$ divisible by $T$ with $N \ge 2T$, there exist embeddings with $\Phi_T > C$ but Fisher discriminant $\lambda_{\max}(S_W^{-1} S_B) < \eta$. In other words, the Fourier spike can be arbitrarily large while mod-$T$ classes remain linearly inseparable.</li>
+  </ol>
+</div>
+
+<p>The necessity direction follows from a Fourier identity (Lemma in the paper) that gives $\mathrm{Tr}(S_B) = \Phi_T / N$. The insufficiency direction is the interesting part. The paper gives an explicit family of counterexamples.</p>
+
+<h3>The counterexample, in pictures</h3>
+
+<p>Every number $n \in \{0, \dots, N-1\}$ decomposes uniquely as $n = r + mT$ with residue $r \in \{0, \dots, T-1\}$ and block index $m \in \{0, \dots, K-1\}$ where $K = N/T$. Pick two vectors $A$ and $M$ and set</p>
+
+<p>$$e(n) = A r + M m.$$</p>
+
+<p>The term $Ar$ encodes the residue and contributes to $S_B$ (and therefore to $\Phi_T$). The term $Mm$ varies within each residue class and contributes only to $S_W$. The two pieces live on independent axes, so scaling $\|M\|$ moves the embeddings along a direction that is invisible to the Fourier spike but arbitrarily large in the within-class scatter.</p>
+
+<figure>
+  <img src="images/part_ii_figure.png" alt="Counterexample to the sufficiency direction of Theorem 1" />
+  <figcaption><strong>Counterexample construction (Theorem 1, part ii).</strong> Fixing $A$ produces a persistent Fourier spike at period $T$ regardless of $M$. When $\|M\|$ is small, residue classes cluster into linearly separable groups. As $\|M\|$ grows, the embeddings interleave across classes, so $\lambda_{\max}(S_W^{-1} S_B)$ becomes arbitrarily small while $\Phi_T$ stays unchanged.</figcaption>
+</figure>
+
+<p>The paper also gives matching Fisher-discriminant bounds that sharpen the picture:</p>
+
+<p>$$\frac{1}{(T-1)\,\mathrm{cond}(S_W)} \cdot \frac{\Phi_T}{N \, \lambda_{\min}(S_W)} \;\le\; \lambda_{\max}(S_W^{-1} S_B) \;\le\; \frac{\Phi_T}{N \, \lambda_{\min}(S_W)}.$$</p>
+
+<p>The Fourier power sets $\Phi_T$, but the conditioning of $S_W$ sets the gap between the upper and lower bounds. Two models with similar Fourier spectra can have wildly different probe accuracy depending on how the periodic signal aligns with the within-class noise.</p>
+
+<figure>
+  <img src="images/fourier_probe_fisher.png" alt="Empirical dissociation between Fourier spikes and probe accuracy" />
+  <figcaption>Empirically, the gap is real. Transformer, Gated DeltaNet, LSTM, and the raw token distribution all have period-<em>T</em> spikes. Only the Transformer and Gated DeltaNet have linearly separable mod-<em>T</em> classes. The LSTM has <em>larger</em> Fourier power at $T=10$ than the Transformer but two orders of magnitude smaller Fisher discriminant.</figcaption>
+</figure>
+
+<h2>What separates the two? Controlled 300M-parameter runs</h2>
+
+<p>To isolate what drives geometric convergence, we trained 300M-parameter models from scratch on 10B tokens of FineWeb-Edu under tightly controlled conditions. We varied three axes: <strong>data</strong>, <strong>architecture</strong>, and <strong>optimizer</strong>.</p>
+
+<h3>Data: which co-occurrence signals matter?</h3>
+
+<figure>
+  <img src="images/data_linear_probe.png" alt="Effect of data perturbations on probe accuracy" />
+  <figcaption>Each data perturbation leaves Fourier spikes nearly identical. Probing tells a different story: <code>Swap Numbers</code> (destroying text-number association) drops κ from 85.4 to 28.8 at $T=10$; <code>Unigram Replace</code> (destroying all co-occurrence) falls to chance.</figcaption>
+</figure>
+
+<p>We designed a series of ablations that each remove one specific property of the training corpus. <code>Swap Numbers</code> preserves number $n$-gram statistics but breaks the link between numbers and their text context. <code>Unigram Replace</code> resamples each number token independently from its marginal distribution, destroying all co-occurrence. <code>Isolate-k</code> packs sequences so that each contains at most $k$ number tokens, controlling cross-number interaction. <code>ContextLength-</code>$\ell$ restricts the context window to $\ell$ tokens.</p>
+
+<p>Each perturbation degrades linear probe accuracy. None of them noticeably changes the Fourier spectrum. Put differently: the spikes are cheap, the geometry is earned. And no single signal is doing all the work. Text-number co-occurrence, broader context, and cross-number interaction each contribute something, and removing any one of them leaves probing weaker than the original setting.</p>
+
+<p>We view this as <strong>structure attribution</strong>. Influence functions attribute predictions to individual training examples. Our controlled perturbations do the analogous thing at the level of representations: they attribute learned features to specific structural properties of the data distribution.</p>
+
+<h3>Architecture: not all sequence models are equal</h3>
+
+<figure>
+  <img src="images/architecture_linear_probe.png" alt="Architecture ablation" />
+  <figcaption>Trained on identical data, Transformers and Gated DeltaNet reach strong mod-<em>T</em> probe accuracy. LSTMs do not, even though their Fourier spikes look just as prominent.</figcaption>
+</figure>
+
+<p>Holding data and compute constant, Transformers and Gated DeltaNet (a linear RNN) learn geometrically separable mod-<em>T</em> features. LSTMs sit near chance on the probe, even though their Fourier spikes are as visible as the Transformer's. This is the cleanest demonstration we have that Fourier spikes are a misleading proxy: a model can wear the costume without having the geometry underneath.</p>
+
+<h3>Optimizer: Muon vs. AdamW</h3>
+
+<p>Muon and AdamW produce similar Fourier spectra across architectures, but probing accuracy varies across optimizer choices. The optimizer is not a cosmetic choice at the representation level.</p>
+
+<h2>A second route: arithmetic training</h2>
+
+<figure>
+  <img src="images/addition_linear_probe.png" alt="Addition-trained models" />
+  <figcaption>9-digit (multi-token) addition produces both spectral and geometric convergence under both Muon and AdamW. 3-digit (single-token) addition produces neither consistently; spectra and probes depend on optimizer and seed.</figcaption>
+</figure>
+
+<p>Pretraining on general text is not the only route. Training from scratch on addition can also induce geometrically separable periodic features, but only in the <strong>multi-token</strong> setting. In 9-digit addition, each output token $c_i$ satisfies</p>
+
+<p>$$c_i = (a_i + b_i + \gamma_i) \bmod 1000,$$</p>
+
+<p>where $\gamma_i \in \{0, 1\}$ is the carry. Each output position is therefore a mod-1000 classification problem. Because our models use tied embeddings, the output logits depend directly on the embedding matrix, so there is direct pressure for the embeddings to develop non-trivial $\Phi_{1000}$, and hence non-trivial $\Phi_T$ for all $T$ dividing $1000 = 2^3 \cdot 5^3$.</p>
+
+<p>In single-token (3-digit) addition, there is no modular constraint. The sequences $a + b = c$ are identical whether interpreted as mod-1000 or mod-1111 arithmetic. The learned representations depend on optimizer and seed, and Fourier features emerge only sometimes.</p>
+
+<figure>
+  <img src="images/addition_3digit_dynamics.png" alt="Training dynamics for 3-digit addition" />
+  <figcaption>Training dynamics for 3-digit addition: under AdamW, one seed exhibits grokking with a phase transition around 1.6 to 2B tokens; another seed never generalizes at all.</figcaption>
+</figure>
+
+<h2>Why &ldquo;convergent evolution&rdquo;?</h2>
+
+<figure>
+  <img src="images/cladogram.png" alt="Cladogram of models" />
+  <figcaption>A cladogram of the systems studied in the paper, grouped by which form of convergence they reach.</figcaption>
+</figure>
+
+<p>In biology, convergent evolution is the independent emergence of similar traits in unrelated lineages facing shared environmental pressures. Eyes in vertebrates and cephalopods, wings in birds and bats, echolocation in bats and dolphins. The shared trait is evidence of a shared constraint, not a shared ancestor.</p>
+
+<p>Fourier features in number embeddings fit the pattern. GPT, Mamba, LSTM, and word2vec share no architectural ancestry worth speaking of, but they all produce the same periodic spectrum. The shared constraint is the training distribution: number tokens occur at frequencies that are already periodic, and almost any learning process that digests this distribution inherits the periodicity.</p>
+
+<p>But inheriting the spectrum is not the same as inheriting the function. Spectral convergence is universal. Geometric convergence requires the data, the architecture, and the optimizer to align, or else a training signal (like multi-token addition) that forces modular structure by construction.</p>
+
+<h2>Takeaways</h2>
+<ol>
+  <li><strong>Fourier spikes are a weak diagnostic.</strong> Even the raw token frequency distribution has them. A spike in a model tells you about the training distribution, not necessarily about the model.</li>
+  <li><strong>The spectral/geometric hierarchy is real.</strong> Linearly decodable mod-<em>T</em> structure is a strictly stronger property than Fourier sparsity, and the two come apart both in theory and in practice.</li>
+  <li><strong>Structure attribution is a useful lens.</strong> Controlled perturbations of the training distribution let us attribute <em>representations</em>, not just predictions, to specific structural properties of the data.</li>
+  <li><strong>Multiple routes, same destination.</strong> Geometric convergence can arise from general text co-occurrence, or from multi-token arithmetic. The mechanism differs; the endpoint looks similar.</li>
+</ol>
+
+<p>More broadly, we think the spectral/geometric distinction is a useful template for interpretability. As we increasingly rely on representation-level diagnostics to understand large models, it matters to distinguish visible structure from functional structure. They are not the same thing.</p>
+
+<h2>Resources</h2>
+<ul>
+  <li>📄 <a href="https://arxiv.org/abs/XXXX.XXXXX">Paper on arXiv</a></li>
+  <li>🤗 <a href="https://hf.co/collections/deqing/convergent-evolution">Trained model collection on Hugging Face</a></li>
+  <li>🏠 <a href="index.html">Project page</a></li>
+</ul>
+
+<footer>
+  <p>Questions or comments? Reach out to the authors via the emails on the <a href="index.html">project page</a>.</p>
+</footer>
+
+</div>
+
+<script>
+  var btn = document.getElementById('themeToggle');
+  function current() {
+    var explicit = document.documentElement.getAttribute('data-theme');
+    if (explicit) return explicit;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  btn.addEventListener('click', function() {
+    var next = current() === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+  });
+</script>
+
+</body>
+</html>

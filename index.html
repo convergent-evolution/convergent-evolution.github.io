@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Convergent Evolution: How Different Language Models Learn Similar Number Representations</title>
+<meta name="description" content="A two-tiered hierarchy of periodic number features in language models. Transformers, Gated DeltaNet, LSTMs, and classical word embeddings all develop Fourier spikes, but only some develop linearly separable mod-T classes." />
+<link rel="stylesheet" href="style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  (function() {
+    var saved = localStorage.getItem('theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+  })();
+</script>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle light / dark">🌓</button>
+
+<div class="container">
+
+<header class="hero">
+  <span class="eyebrow">Preprint · April 2026</span>
+  <h1 class="paper-title">Convergent Evolution:<br/>How Different Language Models Learn Similar Number Representations</h1>
+  <p class="paper-subtitle">A two-tiered hierarchy of periodic features in language models, and why a visible Fourier spike does not mean a model has learned what numbers are.</p>
+
+  <div class="authors">
+    <span class="author"><strong>Deqing Fu</strong><sup class="usc">σ</sup></span>
+    <span class="author"><strong>Tianyi Zhou</strong><sup class="usc">σ</sup></span>
+    <span class="author"><strong>Mikhail Belkin</strong><sup class="ucsd">ψ</sup></span>
+    <span class="author"><strong>Vatsal Sharan</strong><sup class="usc">σ</sup></span>
+    <span class="author"><strong>Robin Jia</strong><sup class="usc">σ</sup></span>
+  </div>
+  <div class="affil">
+    <sup class="usc">σ</sup> University of Southern California &nbsp;·&nbsp;
+    <sup class="ucsd">ψ</sup> UC San Diego
+  </div>
+
+  <div class="links">
+    <a class="primary" href="https://arxiv.org/abs/XXXX.XXXXX">📄 arXiv</a>
+    <a href="blog.html">✍️ Blog post</a>
+    <a href="https://hf.co/collections/deqing/convergent-evolution">🤗 Models</a>
+    <a href="#citation">📌 Cite</a>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat"><div class="num">14+</div><div class="label">Models probed</div></div>
+  <div class="stat"><div class="num">10 B</div><div class="label">Pretraining tokens</div></div>
+  <div class="stat"><div class="num">300 M</div><div class="label">Params per run</div></div>
+  <div class="stat"><div class="num">T = 2, 5, 10</div><div class="label">Universal periods</div></div>
+</div>
+
+<figure>
+  <img src="images/fourier_universality.png" alt="Fourier spectrum of number embeddings across diverse model families" />
+  <figcaption><strong>Universality of Fourier features.</strong> Across Transformer LLMs (GPT-2, GPT-OSS, Llama-3, Llama-4, DeepSeek-V3), non-Transformer LLMs (Mamba, Falcon-Mamba, xLSTM, Kimi-Linear), and classical word embeddings (GloVe, FastText), number token embeddings consistently show spikes at periods <em>T</em> = 2, 5, 10 in the Fourier domain.</figcaption>
+</figure>
+
+<h2>Abstract</h2>
+<div class="abstract">
+<p>Language models trained on natural text learn to represent numbers using periodic features with dominant periods at <em>T</em> = 2, 5, 10. In this paper, we identify a <strong>two-tiered hierarchy</strong> of these features: while Transformers, Linear RNNs, LSTMs, and classical word embeddings trained in different ways all learn features that have period-<em>T</em> spikes in the Fourier domain, only some learn <em>geometrically separable</em> features that can be used to linearly classify a number mod-<em>T</em>.</p>
+<p>To explain this incongruity, we prove that Fourier-domain sparsity is necessary but not sufficient for mod-<em>T</em> geometric separability. Empirically, we investigate when model training yields geometrically separable features, finding that the <strong>data, architecture, optimizer, and tokenizer</strong> all play key roles. In particular, we identify two different routes through which models can acquire geometrically separable features: from complementary co-occurrence signals in general language data (including text–number co-occurrence and cross-number interaction), or from multi-token (but not single-token) addition problems.</p>
+<p>Overall, our results highlight the phenomenon of <em>convergent evolution</em> in feature learning: a diverse range of models learn similar features from different training signals.</p>
+</div>
+
+<h2>The key dissociation</h2>
+<p>We separate two types of convergence that prior work has often conflated. One is easy to get; the other is hard-won.</p>
+
+<div class="dissoc">
+  <div class="card yes">
+    <span class="tag">Universal</span>
+    <h4>Spectral convergence</h4>
+    <p>Fourier spikes at <em>T</em> = 2, 5, 10. Every pretrained LLM we checked has them, and so does the raw number-token frequency distribution with no model at all. Spectral convergence reflects the statistics of the training data, not learned structure.</p>
+  </div>
+  <div class="card no">
+    <span class="tag">Selective</span>
+    <h4>Geometric convergence</h4>
+    <p>Residue classes <em>n</em> mod <em>T</em> are linearly separable in the embedding. This requires the <strong>data</strong>, <strong>architecture</strong>, and <strong>optimizer</strong> to align. Under our 300M-parameter, 10B-token setup, a Transformer reaches Cohen's κ = 96 at <em>T</em> = 2, while an LSTM trained on identical data sits at chance, even though its Fourier power is larger.</p>
+  </div>
+</div>
+
+<figure>
+  <img src="images/fourier_probe_fisher.png" alt="Fourier spikes vs probe accuracy, the dissociation between spectrum and geometry" />
+  <figcaption><strong>A &ldquo;spiky&rdquo; Fourier spectrum does not imply good feature learning.</strong> <em>(Left)</em> Transformer, Gated DeltaNet, LSTM, and even the raw token-frequency distribution all show period-<em>T</em> spikes. <em>(Middle)</em> Only the Transformer and Gated DeltaNet achieve high Cohen's κ for mod-<em>T</em> probes; the LSTM and the raw distribution stay near chance. <em>(Right)</em> Theorem 1 explains the gap via the Fisher discriminant of the within-class scatter.</figcaption>
+</figure>
+
+<h2>Key takeaways</h2>
+<div class="tldr-grid">
+  <div class="tldr-card">
+    <span class="icon">📡</span>
+    <h4>Spikes are cheap</h4>
+    <p>Even the raw number-token frequency histogram produces the same <em>T</em> = 2, 5, 10 spikes. A spike in a model tells you about the training data, not about understanding.</p>
+  </div>
+  <div class="tldr-card">
+    <span class="icon">🧭</span>
+    <h4>Geometry is earned</h4>
+    <p>Linear mod-<em>T</em> separability is a much stronger property than Fourier sparsity. We prove (Theorem 1) that spikes are necessary but not sufficient.</p>
+  </div>
+  <div class="tldr-card">
+    <span class="icon">🔬</span>
+    <h4>Structure attribution</h4>
+    <p>Controlled perturbations of the training distribution attribute <em>representations</em> to specific structural properties of the data, giving a complementary lens to influence functions.</p>
+  </div>
+  <div class="tldr-card">
+    <span class="icon">🛤️</span>
+    <h4>Two routes to geometry</h4>
+    <p>Geometric convergence arises either from complementary co-occurrence signals in general text, or from multi-token addition training where carries force modular subproblems.</p>
+  </div>
+  <div class="tldr-card">
+    <span class="icon">🏗️</span>
+    <h4>Architecture matters</h4>
+    <p>With identical data and compute, Transformers and Gated DeltaNet learn geometrically separable features; LSTMs do not, even though they develop more prominent Fourier spikes.</p>
+  </div>
+  <div class="tldr-card">
+    <span class="icon">🔢</span>
+    <h4>Tokenization matters</h4>
+    <p>9-digit (multi-token) addition forces a mod-1000 subproblem at each output position via carry propagation, producing circular representations. 3-digit (single-token) addition imposes no such constraint; outcomes depend on optimizer and seed.</p>
+  </div>
+</div>
+
+<h2>A biological analogy</h2>
+<figure>
+  <img src="images/cladogram.png" alt="Cladogram of convergent evolution in number representations" />
+  <figcaption>A cladogram of the systems studied in this paper, organized by which form of convergence each exhibits. Distinct architectures independently develop similar number representations under shared training pressures, analogous to convergent evolution in biology.</figcaption>
+</figure>
+<p>In biology, convergent evolution describes unrelated organisms independently developing similar traits under shared environmental pressures. The eyes of vertebrates and cephalopods are the canonical example. Fourier features in number embeddings fit the same pattern: a shared trait that emerges across radically different systems because they share constraints from training data and tokenization.</p>
+
+<h2>Contributions</h2>
+<ul class="contribs">
+  <li><strong>A new distinction.</strong> We introduce the separation between <em>spectral convergence</em> (Fourier spikes) and <em>geometric convergence</em> (linearly separable mod-<em>T</em> classes), and show that the two dissociate sharply across otherwise similar models.</li>
+  <li><strong>A theoretical explanation.</strong> Theorem 1 proves that Fourier-domain sparsity is necessary but not sufficient for mod-<em>T</em> linear separability, with matching Fisher-discriminant bounds that tie probe accuracy to the conditioning of within-class scatter.</li>
+  <li><strong>Structure attribution.</strong> Through controlled data perturbations that remove text–number co-occurrence, cross-number interaction, or context length, we attribute the emergence of geometric convergence to specific structural properties of the training distribution.</li>
+  <li><strong>A second route via arithmetic.</strong> We show that multi-token addition training forces modular subproblems and reliably produces circular representations, while single-token addition does not, revealing the tokenizer as a key lever.</li>
+</ul>
+
+<h2>Results at a glance</h2>
+
+<figure>
+  <img src="images/data_linear_probe.png" alt="Effect of data perturbations on probe accuracy vs. Fourier spectrum" />
+  <figcaption><strong>Geometric convergence depends on the data signal.</strong> Perturbations (<code>Swap Numbers</code>, <code>Unigram Replace</code>, <code>Isolate-k</code>, short context) leave Fourier spectra nearly identical, but mod-<em>T</em> probing degrades substantially. <code>Unigram Replace</code> falls to chance.</figcaption>
+</figure>
+
+<figure>
+  <img src="images/architecture_linear_probe.png" alt="Architecture ablation on mod-T probing" />
+  <figcaption><strong>Architecture matters.</strong> Under matched data and compute, Transformers and Gated DeltaNet reach strong mod-<em>T</em> probe accuracy; LSTMs remain near chance despite showing equally prominent Fourier spikes.</figcaption>
+</figure>
+
+<figure>
+  <img src="images/addition_linear_probe.png" alt="Tokenization determines convergence in arithmetic" />
+  <figcaption><strong>Tokenization determines convergence in arithmetic.</strong> In 9-digit (multi-token) addition, both Muon and AdamW converge to the same spectral structure and near-perfect κ for mod 2, 5, 10. In 3-digit (single-token) addition, the Fourier spectra vary across optimizer and seed, and κ remains near chance.</figcaption>
+</figure>
+
+<p>For the full walkthrough with intuition, theorem statement, and a worked counterexample, see the <a href="blog.html">blog post</a>.</p>
+
+<h2 id="citation">Citation</h2>
+<pre>@article{fu2026convergent,
+  title   = {Convergent Evolution: How Different Language Models Learn Similar Number Representations},
+  author  = {Fu, Deqing and Zhou, Tianyi and Belkin, Mikhail and Sharan, Vatsal and Jia, Robin},
+  journal = {arXiv preprint arXiv:XXXX.XXXXX},
+  year    = {2026}
+}</pre>
+
+<footer>
+  <p>Read the <a href="blog.html">blog post</a> for an informal walkthrough. Models available on <a href="https://hf.co/collections/deqing/convergent-evolution">Hugging Face</a>.</p>
+  <p style="margin-top: 8px;">© 2026 · University of Southern California &amp; UC San Diego</p>
+</footer>
+
+</div>
+
+<script>
+  var btn = document.getElementById('themeToggle');
+  function current() {
+    var explicit = document.documentElement.getAttribute('data-theme');
+    if (explicit) return explicit;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  btn.addEventListener('click', function() {
+    var next = current() === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+  });
+</script>
+
+</body>
+</html>
