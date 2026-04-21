@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Convergent Evolution: How Different Language Models Learn Similar Number Representations</title>
 <meta name="description" content="A two-tiered hierarchy of periodic number features in language models. Transformers, Gated DeltaNet, LSTMs, and classical word embeddings all develop Fourier spikes, but only some develop linearly separable mod-T classes." />
+
+<!-- Open Graph / Twitter card -->
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Convergent Evolution: How Different Language Models Learn Similar Number Representations" />
+<meta property="og:description" content="Fourier spikes in number embeddings are universal across language models. Linear mod-T separability is not. A theorem explains the gap; controlled experiments show what causes it." />
+<meta property="og:image" content="images/fourier_probe_fisher.png" />
+<meta property="og:url" content="https://convergent-evolution.github.io/" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Convergent Evolution in Language Models" />
+<meta name="twitter:description" content="Fourier spikes in number embeddings are universal. Linear mod-T separability is not." />
+<meta name="twitter:image" content="images/fourier_probe_fisher.png" />
+
 <link rel="stylesheet" href="style.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,6 +27,10 @@
     if (saved) document.documentElement.setAttribute('data-theme', saved);
   })();
 </script>
+<script>
+window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }, svg: { fontCache: 'global' } };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
 
@@ -25,10 +41,7 @@
 <div class="container">
 
 <header class="hero">
-  <span class="eyebrow">Preprint · April 2026</span>
   <h1 class="paper-title">Convergent Evolution:<br/>How Different Language Models Learn Similar Number Representations</h1>
-  <p class="paper-subtitle">A two-tiered hierarchy of periodic features in language models, and why a visible Fourier spike does not mean a model has learned what numbers are.</p>
-
   <div class="authors">
     <a class="author" href="https://deqingfu.github.io"><strong>Deqing Fu</strong><span class="seal usc-seal" aria-label="USC"></span></a>
     <a class="author" href="https://kevinzhoutianyi.github.io"><strong>Tianyi Zhou</strong><span class="seal usc-seal" aria-label="USC"></span></a>
@@ -47,13 +60,52 @@
     <a href="https://hf.co/collections/deqing/convergent-evolution">🤗 Models</a>
     <a href="#citation">📌 Cite</a>
   </div>
+
 </header>
 
+<div class="lightbox-overlay" id="lightbox" aria-hidden="true"><img src="" alt="" /></div>
+
 <div class="stats">
-  <div class="stat"><div class="num">14+</div><div class="label">Models probed</div></div>
-  <div class="stat"><div class="num">10 B</div><div class="label">Pretraining tokens</div></div>
-  <div class="stat"><div class="num">300 M</div><div class="label">Params per run</div></div>
-  <div class="stat"><div class="num">T = 2, 5, 10</div><div class="label">Universal periods</div></div>
+  <div class="stat" tabindex="0" role="button" aria-label="Reveal answer">
+    <div class="face front">
+      <span class="icon">📡</span>
+      <div class="q">Do pretrained LLMs develop Fourier spikes at $T = 2, 5, 10$?</div>
+    </div>
+    <div class="face back">
+      <div class="a">Universal</div>
+      <div class="detail">9 pretrained LLMs, classical word embeddings, and even the raw number-token frequency distribution all spike at $T = 2, 5, 10$.</div>
+    </div>
+  </div>
+  <div class="stat" tabindex="0" role="button" aria-label="Reveal answer">
+    <div class="face front">
+      <span class="icon">🧭</span>
+      <div class="q">Do they all encode $n \bmod T$ linearly?</div>
+    </div>
+    <div class="face back">
+      <div class="a">3 of 4</div>
+      <div class="detail">Among four 300M-param architectures we trained on 10B FineWeb-Edu, Transformer, Gated DeltaNet, and Mamba-2 develop linearly separable mod-$T$ classes; the LSTM stays at chance, despite a <em>larger</em> Fourier spike.</div>
+    </div>
+  </div>
+  <div class="stat" tabindex="0" role="button" aria-label="Reveal answer">
+    <div class="face front">
+      <span class="icon">📐</span>
+      <div class="q">Why can spectrum and geometry come apart?</div>
+    </div>
+    <div class="face back">
+      <div class="a">Theorem 1</div>
+      <div class="detail">Fourier sparsity is necessary but not sufficient for mod-$T$ linear separability; the within-class scatter controls the gap.</div>
+    </div>
+  </div>
+  <div class="stat" tabindex="0" role="button" aria-label="Reveal answer">
+    <div class="face front">
+      <span class="icon">🛤️</span>
+      <div class="q">How does geometric convergence emerge?</div>
+    </div>
+    <div class="face back">
+      <div class="a">Two routes</div>
+      <div class="detail">(1) complementary text co-occurrence signals in pretraining; (2) multi-token addition, where per-digit carries turn each output position into a modular subproblem.</div>
+    </div>
+  </div>
 </div>
 
 <figure>
@@ -61,14 +113,14 @@
   <figcaption><strong>Universality of Fourier features.</strong> Across Transformer LLMs (GPT-2, GPT-OSS, Llama-3, Llama-4, DeepSeek-V3), non-Transformer LLMs (Mamba, Falcon-Mamba, xLSTM, Kimi-Linear), and classical word embeddings (GloVe, FastText), number token embeddings consistently show spikes at periods <em>T</em> = 2, 5, 10 in the Fourier domain.</figcaption>
 </figure>
 
-<h2>Abstract</h2>
+<h2 id="abstract">Abstract</h2>
 <div class="abstract">
 <p>Language models trained on natural text learn to represent numbers using periodic features with dominant periods at <em>T</em> = 2, 5, 10. In this paper, we identify a <strong>two-tiered hierarchy</strong> of these features: while Transformers, Linear RNNs, LSTMs, and classical word embeddings trained in different ways all learn features that have period-<em>T</em> spikes in the Fourier domain, only some learn <em>geometrically separable</em> features that can be used to linearly classify a number mod-<em>T</em>.</p>
 <p>To explain this incongruity, we prove that Fourier-domain sparsity is necessary but not sufficient for mod-<em>T</em> geometric separability. Empirically, we investigate when model training yields geometrically separable features, finding that the <strong>data, architecture, optimizer, and tokenizer</strong> all play key roles. In particular, we identify two different routes through which models can acquire geometrically separable features: from complementary co-occurrence signals in general language data (including text–number co-occurrence and cross-number interaction), or from multi-token (but not single-token) addition problems.</p>
 <p>Overall, our results highlight the phenomenon of <em>convergent evolution</em> in feature learning: a diverse range of models learn similar features from different training signals.</p>
 </div>
 
-<h2>The key dissociation</h2>
+<h2 id="dissociation">The key dissociation</h2>
 <p>We separate two types of convergence that prior work has often conflated. One is easy to get; the other is hard-won.</p>
 
 <div class="dissoc">
@@ -89,7 +141,7 @@
   <figcaption><strong>A &ldquo;spiky&rdquo; Fourier spectrum does not imply good feature learning.</strong> <em>(Left)</em> Transformer, Gated DeltaNet, LSTM, and even the raw token-frequency distribution all show period-<em>T</em> spikes. <em>(Middle)</em> Only the Transformer and Gated DeltaNet achieve high Cohen's κ for mod-<em>T</em> probes; the LSTM and the raw distribution stay near chance. <em>(Right)</em> Theorem 1 explains the gap via the Fisher discriminant of the within-class scatter.</figcaption>
 </figure>
 
-<h2>Key takeaways</h2>
+<h2 id="takeaways">Key takeaways</h2>
 <div class="tldr-grid">
   <div class="tldr-card">
     <span class="icon">📡</span>
@@ -123,14 +175,14 @@
   </div>
 </div>
 
-<h2>A biological analogy</h2>
+<h2 id="biology">A biological analogy</h2>
 <figure>
   <img src="images/cladogram.png" alt="Cladogram of convergent evolution in number representations" />
   <figcaption>A cladogram of the systems studied in this paper, organized by which form of convergence each exhibits. Distinct architectures independently develop similar number representations under shared training pressures, analogous to convergent evolution in biology.</figcaption>
 </figure>
 <p>In biology, convergent evolution describes unrelated organisms independently developing similar traits under shared environmental pressures. The eyes of vertebrates and cephalopods are the canonical example. Fourier features in number embeddings fit the same pattern: a shared trait that emerges across radically different systems because they share constraints from training data and tokenization.</p>
 
-<h2>Contributions</h2>
+<h2 id="contributions">Contributions</h2>
 <ul class="contribs">
   <li><strong>A new distinction.</strong> We introduce the separation between <em>spectral convergence</em> (Fourier spikes) and <em>geometric convergence</em> (linearly separable mod-<em>T</em> classes), and show that the two dissociate sharply across otherwise similar models.</li>
   <li><strong>A theoretical explanation.</strong> Theorem 1 proves that Fourier-domain sparsity is necessary but not sufficient for mod-<em>T</em> linear separability, with matching Fisher-discriminant bounds that tie probe accuracy to the conditioning of within-class scatter.</li>
@@ -138,7 +190,7 @@
   <li><strong>A second route via arithmetic.</strong> We show that multi-token addition training forces modular subproblems and reliably produces circular representations, while single-token addition does not, revealing the tokenizer as a key lever.</li>
 </ul>
 
-<h2>Results at a glance</h2>
+<h2 id="results">Results at a glance</h2>
 
 <figure>
   <img src="images/data_linear_probe.png" alt="Effect of data perturbations on probe accuracy vs. Fourier spectrum" />
@@ -166,13 +218,60 @@
 }</pre>
 
 <footer>
-  <p>Read the <a href="blog.html">blog post</a> for an informal walkthrough. Models available on <a href="https://hf.co/collections/deqing/convergent-evolution">Hugging Face</a>.</p>
+  <p><strong>Contact.</strong>
+    <a href="mailto:deqingfu@usc.edu">deqingfu@usc.edu</a>,
+    <a href="mailto:tzhou029@usc.edu">tzhou029@usc.edu</a>,
+    <a href="mailto:mbelkin@ucsd.edu">mbelkin@ucsd.edu</a>,
+    <a href="mailto:vsharan@usc.edu">vsharan@usc.edu</a>,
+    <a href="mailto:robinjia@usc.edu">robinjia@usc.edu</a>.
+  </p>
+  <p>Read the <a href="blog.html">blog post</a> for an informal walkthrough. Models on <a href="https://hf.co/collections/deqing/convergent-evolution">Hugging Face</a>.</p>
   <p style="margin-top: 8px;">© 2026 · University of Southern California &amp; UC San Diego</p>
 </footer>
 
 </div>
 
 <script>
+  // Figure lightbox
+  (function() {
+    var lb = document.getElementById('lightbox');
+    if (!lb) return;
+    var img = lb.querySelector('img');
+    document.querySelectorAll('figure img').forEach(function(el) {
+      el.addEventListener('click', function() {
+        img.src = el.src;
+        img.alt = el.alt || '';
+        lb.classList.add('open');
+        lb.setAttribute('aria-hidden', 'false');
+      });
+    });
+    lb.addEventListener('click', function() {
+      lb.classList.remove('open');
+      lb.setAttribute('aria-hidden', 'true');
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        lb.classList.remove('open');
+        lb.setAttribute('aria-hidden', 'true');
+      }
+    });
+  })();
+</script>
+
+<script>
+  // Flip cards: tap-to-toggle on touch devices; hover-only on desktop
+  (function() {
+    var hasHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    document.querySelectorAll('.stats .stat').forEach(function(card) {
+      if (!hasHover) {
+        card.addEventListener('click', function() { card.classList.toggle('flipped'); });
+      }
+      card.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.classList.toggle('flipped'); }
+      });
+    });
+  })();
+
   var btn = document.getElementById('themeToggle');
   function current() {
     var explicit = document.documentElement.getAttribute('data-theme');

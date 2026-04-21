@@ -114,7 +114,7 @@ window.MathJax = {
 
 <figure>
   <img src="images/part_ii_figure.png" alt="Counterexample to the sufficiency direction of Theorem 1" />
-  <figcaption><strong>Counterexample construction (Theorem 1, part ii).</strong> Fixing $A$ produces a persistent Fourier spike at period $T$ regardless of $B$. When $B$ is small, residue classes cluster into linearly separable groups. As $B$ grows, the embeddings interleave across classes, and the best linear classifier accuracy approaches the random-guessing baseline $1/T$, all while $\Phi_T$ stays unchanged.</figcaption>
+  <figcaption><strong>Counterexample construction for Theorem 1(ii), shown at $T = 10$.</strong> Fixing $A$ produces a persistent Fourier spike at period $T$ regardless of $B$. When $B$ is small, the residue classes cluster into linearly separable groups. As $B$ grows, the embeddings interleave across classes, and the best linear classifier's accuracy approaches the random-guessing baseline $1/T$, all while $\Phi_T$ stays unchanged.</figcaption>
 </figure>
 
 <p>The paper also gives matching Fisher-discriminant bounds that sharpen the picture:</p>
@@ -130,7 +130,7 @@ window.MathJax = {
 
 <h2>What separates the two? Controlled 300M-parameter runs</h2>
 
-<p>To isolate what drives geometric convergence, we trained 300M-parameter models from scratch on 10B tokens of FineWeb-Edu under tightly controlled conditions, varying <strong>data</strong>, <strong>architecture</strong>, and <strong>optimizer</strong> one factor at a time. Two of these axes have figures in the blog; for the optimizer story, see the paper.</p>
+<p>To isolate what drives geometric convergence, we trained 300M-parameter models from scratch on 10B tokens of FineWeb-Edu under tightly controlled conditions, varying <strong>data</strong>, <strong>architecture</strong>, and <strong>optimizer</strong> one factor at a time.</p>
 
 <h3>Data: which co-occurrence signals matter?</h3>
 
@@ -145,14 +145,23 @@ window.MathJax = {
 
 <p>We view this as <strong>structure attribution</strong>. Influence functions attribute predictions to individual training examples. Our controlled perturbations do the analogous thing at the level of representations: they attribute learned features to specific structural properties of the data distribution.</p>
 
-<h3>Architecture: not all sequence models are equal</h3>
+<h3>Architecture and optimizer: not all sequence models are equal</h3>
 
 <figure>
-  <img src="images/architecture_linear_probe.png" alt="Architecture ablation" />
-  <figcaption>Trained on identical data, Transformers and Gated DeltaNet reach strong mod-<em>T</em> probe accuracy. LSTMs do not, even though their Fourier spikes look just as prominent.</figcaption>
+  <img src="images/architecture_linear_probe.png" alt="Architecture and optimizer ablation" />
+  <figcaption>Trained on identical data, Transformers, Gated DeltaNet, and Mamba-2 all reach strong mod-<em>T</em> probe accuracy under both Muon and AdamW. The 12-layer LSTM does not, even though its Fourier spikes look just as prominent; classical PPMI and word2vec embeddings sit in between.</figcaption>
 </figure>
 
-<p>Holding data and compute constant, Transformers and Gated DeltaNet (a linear RNN) learn geometrically separable mod-<em>T</em> features. LSTMs sit near chance on the probe, even though their Fourier spikes are as visible as the Transformer's. This is the cleanest demonstration we have that Fourier spikes are a misleading proxy: a model can wear the costume without having the geometry underneath.</p>
+<p>Holding data and compute constant, <strong>Transformers</strong> and two linear RNNs (<strong>Gated DeltaNet</strong> and <strong>Mamba-2</strong>) all learn geometrically separable mod-<em>T</em> features, while the <strong>LSTM</strong> sits near chance on the probe even though its Fourier spikes are as visible as the Transformer's. A shallower (4-layer) LSTM shows no improvement either, so the failure is architectural rather than a matter of capacity. In fact, the LSTM's Fourier spectrum closely resembles the number-token marginal distribution, suggesting its embeddings capture little beyond unigram frequency statistics.</p>
+
+<p>The optimizer is not a cosmetic choice at the representation level, and its effect is architecture-dependent. Muon improves probing for the Transformer (κ = 85.4 vs 72.1 at $T=10$) and Gated DeltaNet (77.8 vs 69.7), but Mamba-2 prefers AdamW (80.1 vs 76.7). The Transformer trained with Muon has the strongest probe overall. We see no universal winner across architectures.</p>
+
+<p>Classical baselines put this in perspective. PPMI and word2vec trained on the same 10B tokens show clear Fourier spikes but only moderate probing (κ = 27.1 and 29.3 at $T = 10$), a clean instance of the spectral/geometric dissociation outside the modern LLM regime.</p>
+
+<figure>
+  <img src="images/dynamics_phi_T.png" alt="Training dynamics of Phi_T and probe accuracy" />
+  <figcaption>Spectral and geometric convergence co-emerge gradually during Transformer pretraining. Both $\Phi_T$ and probe accuracy rise smoothly, with no phase transition — unlike the grokking dynamics documented for modular-arithmetic tasks.</figcaption>
+</figure>
 
 
 <h2>A second route: arithmetic training</h2>
