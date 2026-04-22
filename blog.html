@@ -76,6 +76,7 @@ window.MathJax = {
     <li><a href="#convergent-evolution">Why "convergent evolution"?</a></li>
     <li><a href="#takeaways">Takeaways</a></li>
     <li><a href="#related-work">Related work</a></li>
+    <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </nav>
 
@@ -247,6 +248,12 @@ window.MathJax = {
 <p><strong>Controlled studies of pretraining.</strong> <a class="cite" href="https://arxiv.org/abs/2512.17351" data-title="Physics of Language Models: Part 4.1, Architecture design and the magic of Canon layers" data-authors="Zeyuan Allen-Zhu" data-venue="arXiv:2512.17351, 2025">Allen-Zhu (2025)</a> uses controlled synthetic pretraining to isolate which capabilities emerge from which architectural and data choices. Our perturbations (<code>Swap Numbers</code>, <code>Unigram Replace</code>, <code>Isolate-k</code>, <code>ContextLength-</code>$\ell$) follow the same spirit, applied to natural pretraining data and aimed at the level of <em>representations</em> rather than capabilities.</p>
 
 <p><strong>Attribution.</strong> Influence functions (<a class="cite" href="https://proceedings.mlr.press/v70/koh17a.html" data-title="Understanding Black-box Predictions via Influence Functions" data-authors="Pang Wei Koh, Percy Liang" data-venue="ICML 2017">Koh and Liang, 2017</a>; <a class="cite" href="https://arxiv.org/abs/2308.03296" data-title="Studying Large Language Model Generalization with Influence Functions" data-authors="Roger Grosse, Juhan Bae, Cem Anil, Nelson Elhage, Alex Tamkin, Amirhossein Tajdini, Benoit Steiner, Dustin Li, Esin Durmus, Ethan Perez, et al." data-venue="arXiv:2308.03296, 2023">Grosse et al., 2023</a>) and Data Shapley (<a class="cite" href="#" data-title="Data Shapley: Equitable Valuation of Data for Machine Learning" data-authors="Amirata Ghorbani, James Zou" data-venue="ICML 2019">Ghorbani and Zou, 2019</a>) attribute model <em>predictions</em> to individual training examples. Our controlled perturbations are an analogue at the level of <em>representations</em>: they attribute emergent features to specific structural properties of the training distribution.</p>
+
+<h2 id="acknowledgments">Acknowledgments</h2>
+
+<p>We thank the Center for Advanced Research Computing (CARC) at the University of Southern California and the USC NLP Group for compute. DF and RJ were supported by a gift from the USC–Capital One Center for Responsible AI and Decision Making in Finance (CREDIF). RJ was supported in part by NSF grant IIS-2403436. VS was supported by NSF grant CCF-2239265, an Amazon Research Award, a Google Research Scholar Award, and an Okawa Foundation Research Grant. This work used the Delta system at NCSA through allocation CIS250737 from the ACCESS program (NSF grants #2138259, #2138286, #2138307, #2137603, and #2138296). Portions of the work were done while some of the authors were visiting the Simons Institute for the Theory of Computing. GPU resources used to train and analyze the 300M-parameter models were provided through the NVIDIA Academic Grant Program.</p>
+
+<p style="font-size: 0.86rem; color: var(--muted);">Any opinions, findings, and conclusions or recommendations expressed in this material are those of the authors and do not reflect the views of the funding agencies.</p>
 
 <h2 id="resources">Resources</h2>
 <ul>
