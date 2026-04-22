@@ -77,6 +77,7 @@ window.MathJax = {
     <li><a href="#takeaways">Takeaways</a></li>
     <li><a href="#related-work">Related work</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
+    <li><a href="#citation">Citation</a></li>
   </ol>
 </nav>
 
@@ -255,6 +256,17 @@ window.MathJax = {
 
 <p style="font-size: 0.86rem; color: var(--muted);">Any opinions, findings, and conclusions or recommendations expressed in this material are those of the authors and do not reflect the views of the funding agencies.</p>
 
+<h2 id="citation">Citation</h2>
+<div class="bibtex-wrap">
+  <button class="copy-btn" type="button" data-target="bibtex-blog" aria-label="Copy BibTeX">Copy</button>
+  <pre id="bibtex-blog">@article{fu2026convergent,
+  title   = {Convergent Evolution: How Different Language Models Learn Similar Number Representations},
+  author  = {Fu, Deqing and Zhou, Tianyi and Belkin, Mikhail and Sharan, Vatsal and Jia, Robin},
+  journal = {arXiv preprint arXiv:XXXX.XXXXX},
+  year    = {2026}
+}</pre>
+</div>
+
 <h2 id="resources">Resources</h2>
 <ul>
   <li>📄 <a href="https://arxiv.org/abs/XXXX.XXXXX">Paper on arXiv</a></li>
@@ -322,6 +334,23 @@ window.MathJax = {
     window.addEventListener('scroll', close, { passive: true });
     window.addEventListener('resize', close);
   })();
+
+  // BibTeX copy button
+  document.querySelectorAll('.copy-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var target = document.getElementById(btn.dataset.target);
+      if (!target) return;
+      navigator.clipboard.writeText(target.innerText).then(function() {
+        var prev = btn.innerText;
+        btn.innerText = 'Copied ✓';
+        btn.classList.add('copied');
+        setTimeout(function() { btn.innerText = prev; btn.classList.remove('copied'); }, 1500);
+      }).catch(function() {
+        btn.innerText = 'Press Cmd+C';
+        setTimeout(function() { btn.innerText = 'Copy'; }, 1500);
+      });
+    });
+  });
 
   // Reading progress bar
   (function() {

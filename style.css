@@ -767,6 +767,14 @@ a.cite {
  * BibTeX copy button
  * ====================================================================== */
 .bibtex-wrap { position: relative; }
+.bibtex-wrap pre {
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  box-shadow: none;
+  font-size: 0.82rem;
+  padding: 18px 20px;
+}
 .copy-btn {
   position: absolute;
   top: 12px;
@@ -774,21 +782,22 @@ a.cite {
   padding: 5px 12px;
   font-size: 0.78rem;
   font-weight: 500;
-  color: var(--code-fg);
-  background: color-mix(in srgb, var(--code-fg) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--code-fg) 20%, transparent);
+  color: var(--muted);
+  background: var(--card2);
+  border: 1px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
   font-family: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
   z-index: 2;
 }
 .copy-btn:hover {
-  background: color-mix(in srgb, var(--code-fg) 22%, transparent);
+  color: var(--fg);
+  border-color: var(--fg);
 }
 .copy-btn.copied {
-  color: #b6f5a9;
-  border-color: #b6f5a9;
+  color: #2a8f4a;
+  border-color: #2a8f4a;
 }
 
 /* ========================================================================
@@ -814,8 +823,8 @@ body.blog .toc {
   body.blog .toc {
     position: fixed;
     top: 80px;
-    left: calc((100vw - 720px) / 2 - 240px);
-    width: 210px;
+    left: 28px;
+    width: 220px;
     max-height: calc(100vh - 120px);
     overflow-y: auto;
     background: transparent;
