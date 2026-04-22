@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Convergent Evolution in Number Representations · Blog Post</title>
 <meta name="description" content="An informal walkthrough of our paper on how diverse language models converge to similar number representations, and why Fourier spikes are a weak proxy for understanding." />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <link rel="stylesheet" href="style.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <script>
   (function() {
     var saved = localStorage.getItem('theme');
@@ -23,10 +24,9 @@ window.MathJax = {
 </script>
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
-<body>
+<body class="blog">
 
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="sealThicken"><feMorphology operator="dilate" radius="0.5"/></filter></svg>
-
+<div class="progress" id="progress"></div>
 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle light / dark">🌓</button>
 
 <div class="container">
@@ -34,19 +34,25 @@ window.MathJax = {
 <a class="back-link" href="index.html">← Back to project page</a>
 
 <header class="hero">
-  <span class="eyebrow">Blog post · April 2026</span>
-  <h1 class="paper-title">Convergent Evolution in Number Representations</h1>
-  <div class="authors" style="margin-bottom: 4px;">
-    <a class="author" href="https://deqingfu.github.io"><strong>Deqing Fu</strong><span class="seal usc-seal" aria-label="USC"></span></a>
-    <a class="author" href="https://kevinzhoutianyi.github.io"><strong>Tianyi Zhou</strong><span class="seal usc-seal" aria-label="USC"></span></a>
-    <a class="author" href="https://misha.belkin-wang.org"><strong>Mikhail Belkin</strong><span class="seal ucsd-seal" aria-label="UCSD"></span></a>
-    <a class="author" href="https://vatsalsharan.github.io"><strong>Vatsal Sharan</strong><span class="seal usc-seal" aria-label="USC"></span></a>
-    <a class="author" href="https://robinjia.github.io"><strong>Robin Jia</strong><span class="seal usc-seal" aria-label="USC"></span></a>
+  <h1 class="paper-title">Convergent Evolution: How Different Language Models Learn Similar Number Representations</h1>
+
+  <div class="meta-grid">
+    <div class="meta-col">
+      <div class="meta-label">Authors</div>
+      <div class="meta-value authors">
+        <a class="author" href="https://deqingfu.github.io">Deqing Fu</a>,
+        <a class="author" href="https://kevinzhoutianyi.github.io">Tianyi Zhou</a>,
+        <a class="author" href="https://misha.belkin-wang.org">Mikhail Belkin</a>,
+        <a class="author" href="https://vatsalsharan.github.io">Vatsal Sharan</a>,
+        <a class="author" href="https://robinjia.github.io">Robin Jia</a>
+      </div>
+    </div>
+    <div class="meta-col meta-right">
+      <div class="meta-label">Affiliations</div>
+      <div class="meta-value">University of Southern California<br/>UC San Diego</div>
+    </div>
   </div>
-  <div class="affil">
-    <span class="seal usc-seal" aria-label="USC"></span> University of Southern California &nbsp;·&nbsp;
-    <span class="seal ucsd-seal" aria-label="UCSD"></span> UC San Diego
-  </div>
+
   <div class="links">
     <a class="primary" href="https://arxiv.org/abs/XXXX.XXXXX">📄 arXiv</a>
     <a href="index.html">🏠 Project page</a>
@@ -54,11 +60,30 @@ window.MathJax = {
   </div>
 </header>
 
-<h2>A suspiciously universal pattern</h2>
+<section class="tldr-block" aria-label="Summary">
+  <div class="meta-label">Summary</div>
+  <p>Language models develop <em>Fourier spikes</em> at periods $T = 2, 5, 10$ when representing numbers. We show this is <em>universal</em>: every pretrained LLM we examine, every classical word-embedding baseline, and even the raw number-token frequency distribution with no model at all develop the same spikes. But a stronger property, the linear separability of numbers by their residue mod $T$, is <em>selective</em>: only some systems achieve it. We prove the two properties can dissociate arbitrarily, identify what causes the gap in controlled pretraining runs, and show that multi-token addition training reaches the same endpoint through a different mechanism.</p>
+</section>
+
+<nav class="toc" id="toc" aria-label="Table of contents">
+  <div class="toc-title">Contents</div>
+  <ol>
+    <li><a href="#universal">A suspiciously universal pattern</a></li>
+    <li><a href="#spectral-vs-geometric">Spectral vs. geometric convergence</a></li>
+    <li><a href="#theorem">A theorem</a></li>
+    <li><a href="#what-separates">What separates the two?</a></li>
+    <li><a href="#arithmetic">A second route via arithmetic</a></li>
+    <li><a href="#convergent-evolution">Why "convergent evolution"?</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+    <li><a href="#related-work">Related work</a></li>
+  </ol>
+</nav>
+
+<h2 id="universal">A suspiciously universal pattern</h2>
 
 <p>A growing body of interpretability work has found that language models represent numbers using <em>periodic features</em>. Take the embedding of each integer token, run a discrete Fourier transform over the sequence of embeddings, and you reliably see spikes at periods <em>T</em> = 2, 5, 10. This has been observed in GPT-2, Llama, and other Transformers, and interpreted as evidence that next-token prediction teaches models something structural about numbers.</p>
 
-<p>We started with a simple question: how far does this generalize? So we looked at almost everything we could get our hands on. Transformers of many scales (GPT-2, GPT-OSS, Llama-3, Llama-4, DeepSeek-V3), non-Transformer LLMs (Mamba, Falcon-Mamba, xLSTM, Kimi-Linear), and classical word embeddings (GloVe, FastText).</p>
+<p>We started with a simple question: how far does this generalize? So we looked at almost everything we could get our hands on. Transformers of many scales (GPT-2, <a href="https://arxiv.org/abs/2508.10925">GPT-OSS</a>, <a href="https://arxiv.org/abs/2407.21783">Llama-3</a>, <a href="https://ai.meta.com/blog/llama-4-multimodal-intelligence/">Llama-4</a>, <a href="https://arxiv.org/abs/2412.19437">DeepSeek-V3</a>), non-Transformer LLMs (<a href="https://arxiv.org/abs/2312.00752">Mamba</a>, <a href="https://arxiv.org/abs/2410.05355">Falcon-Mamba</a>, <a href="https://arxiv.org/abs/2405.04517">xLSTM</a>, <a href="https://arxiv.org/abs/2510.26692">Kimi-Linear</a>), and classical word embeddings (<a href="https://aclanthology.org/D14-1162/">GloVe</a>, <a href="https://aclanthology.org/Q17-1010/">FastText</a>).</p>
 
 <figure>
   <img src="images/fourier_universality.png" alt="Fourier spectra across many model families" />
@@ -69,7 +94,7 @@ window.MathJax = {
 
 <blockquote>If a quantity that any reasonable model would inherit from training data already has the signature, what exactly are we measuring when we see it in a trained model?</blockquote>
 
-<h2>Spectral vs. geometric convergence</h2>
+<h2 id="spectral-vs-geometric">Spectral vs. geometric convergence</h2>
 
 <p>This motivates a distinction we make throughout the paper.</p>
 
@@ -80,7 +105,7 @@ window.MathJax = {
 
 <p>The first is a statement about the spectrum. The second is a statement about geometry: period-<em>T</em> structure is only useful if numbers sharing the same residue cluster together in embedding space.</p>
 
-<h2>A theorem: spikes are necessary but not sufficient</h2>
+<h2 id="theorem">A theorem: spikes are necessary but not sufficient</h2>
 
 <p>The main theoretical result in the paper formalizes this gap. Let $\{e(n)\}_{n=0}^{N-1}$ be the embeddings of numbers 0 through $N-1$, and let $C_r = \{n : n \equiv r \pmod T\}$ be the mod-$T$ residue classes. Define the discrete Fourier transform</p>
 
@@ -128,7 +153,7 @@ window.MathJax = {
   <figcaption>Empirically, the gap is real. Transformer, Gated DeltaNet, LSTM, and the raw token distribution all have period-<em>T</em> spikes. Only the Transformer and Gated DeltaNet have linearly separable mod-<em>T</em> classes. The LSTM has <em>larger</em> Fourier power at $T=10$ than the Transformer but two orders of magnitude smaller Fisher discriminant.</figcaption>
 </figure>
 
-<h2>What separates the two? Controlled 300M-parameter runs</h2>
+<h2 id="what-separates">What separates the two? Controlled 300M-parameter runs</h2>
 
 <p>To isolate what drives geometric convergence, we trained 300M-parameter models from scratch on 10B tokens of FineWeb-Edu under tightly controlled conditions, varying <strong>data</strong>, <strong>architecture</strong>, and <strong>optimizer</strong> one factor at a time.</p>
 
@@ -160,11 +185,11 @@ window.MathJax = {
 
 <figure>
   <img src="images/dynamics_phi_T.png" alt="Training dynamics of Phi_T and probe accuracy" />
-  <figcaption>Spectral and geometric convergence co-emerge gradually during Transformer pretraining. Both $\Phi_T$ and probe accuracy rise smoothly, with no phase transition — unlike the grokking dynamics documented for modular-arithmetic tasks.</figcaption>
+  <figcaption>Spectral and geometric convergence co-emerge gradually during Transformer pretraining. Both $\Phi_T$ and probe accuracy rise smoothly, with no phase transition, unlike the grokking dynamics reported for modular-arithmetic tasks.</figcaption>
 </figure>
 
 
-<h2>A second route: arithmetic training</h2>
+<h2 id="arithmetic">A second route: arithmetic training</h2>
 
 <figure>
   <img src="images/addition_linear_probe.png" alt="Addition-trained models" />
@@ -184,7 +209,7 @@ window.MathJax = {
   <figcaption>Training dynamics for 3-digit addition: under AdamW, one seed exhibits grokking with a phase transition around 1.6 to 2B tokens; another seed never generalizes at all.</figcaption>
 </figure>
 
-<h2>Why &ldquo;convergent evolution&rdquo;?</h2>
+<h2 id="convergent-evolution">Why &ldquo;convergent evolution&rdquo;?</h2>
 
 <figure>
   <img src="images/cladogram.png" alt="Cladogram of models" />
@@ -197,7 +222,7 @@ window.MathJax = {
 
 <p>But inheriting the spectrum is not the same as inheriting the function. Spectral convergence is universal. Geometric convergence requires the data, the architecture, and the optimizer to align, or else a training signal (like multi-token addition) that forces modular structure by construction.</p>
 
-<h2>Takeaways</h2>
+<h2 id="takeaways">Takeaways</h2>
 <ol>
   <li><strong>Fourier spikes are a weak diagnostic.</strong> Even the raw token frequency distribution has them. A spike in a model tells you about the training distribution, not necessarily about the model.</li>
   <li><strong>The spectral/geometric hierarchy is real.</strong> Linearly decodable mod-<em>T</em> structure is a strictly stronger property than Fourier sparsity, and the two come apart both in theory and in practice.</li>
@@ -207,7 +232,7 @@ window.MathJax = {
 
 <p>More broadly, we think the spectral/geometric distinction is a useful template for interpretability. As we increasingly rely on representation-level diagnostics to understand large models, it matters to distinguish visible structure from functional structure. They are not the same thing.</p>
 
-<h2>Related work</h2>
+<h2 id="related-work">Related work</h2>
 
 <p style="font-size: 0.92rem; color: var(--muted); margin-top: -8px;">Click any citation to see the full title, authors, and venue.</p>
 
@@ -223,7 +248,7 @@ window.MathJax = {
 
 <p><strong>Attribution.</strong> Influence functions (<a class="cite" href="https://proceedings.mlr.press/v70/koh17a.html" data-title="Understanding Black-box Predictions via Influence Functions" data-authors="Pang Wei Koh, Percy Liang" data-venue="ICML 2017">Koh and Liang, 2017</a>; <a class="cite" href="https://arxiv.org/abs/2308.03296" data-title="Studying Large Language Model Generalization with Influence Functions" data-authors="Roger Grosse, Juhan Bae, Cem Anil, Nelson Elhage, Alex Tamkin, Amirhossein Tajdini, Benoit Steiner, Dustin Li, Esin Durmus, Ethan Perez, et al." data-venue="arXiv:2308.03296, 2023">Grosse et al., 2023</a>) and Data Shapley (<a class="cite" href="#" data-title="Data Shapley: Equitable Valuation of Data for Machine Learning" data-authors="Amirata Ghorbani, James Zou" data-venue="ICML 2019">Ghorbani and Zou, 2019</a>) attribute model <em>predictions</em> to individual training examples. Our controlled perturbations are an analogue at the level of <em>representations</em>: they attribute emergent features to specific structural properties of the training distribution.</p>
 
-<h2>Resources</h2>
+<h2 id="resources">Resources</h2>
 <ul>
   <li>📄 <a href="https://arxiv.org/abs/XXXX.XXXXX">Paper on arXiv</a></li>
   <li>🤗 <a href="https://hf.co/collections/deqing/convergent-evolution">Trained model collection on Hugging Face</a></li>
@@ -231,7 +256,15 @@ window.MathJax = {
 </ul>
 
 <footer>
-  <p>Questions or comments? Reach out to the authors via the emails on the <a href="index.html">project page</a>.</p>
+  <p><strong>Contact.</strong>
+    <a href="mailto:deqingfu@usc.edu">deqingfu@usc.edu</a>,
+    <a href="mailto:tzhou029@usc.edu">tzhou029@usc.edu</a>,
+    <a href="mailto:mbelkin@ucsd.edu">mbelkin@ucsd.edu</a>,
+    <a href="mailto:vsharan@usc.edu">vsharan@usc.edu</a>,
+    <a href="mailto:robinjia@usc.edu">robinjia@usc.edu</a>.
+  </p>
+  <p>Models on <a href="https://hf.co/collections/deqing/convergent-evolution">Hugging Face</a>. Return to the <a href="index.html">project page</a>.</p>
+  <p style="margin-top: 8px;">© 2026 · University of Southern California &amp; UC San Diego</p>
 </footer>
 
 </div>
@@ -281,6 +314,41 @@ window.MathJax = {
     });
     window.addEventListener('scroll', close, { passive: true });
     window.addEventListener('resize', close);
+  })();
+
+  // Reading progress bar
+  (function() {
+    var bar = document.getElementById('progress');
+    if (!bar) return;
+    function update() {
+      var h = document.documentElement;
+      var scrolled = h.scrollTop || document.body.scrollTop;
+      var total = (h.scrollHeight - h.clientHeight) || 1;
+      var pct = Math.min(100, Math.max(0, (scrolled / total) * 100));
+      bar.style.width = pct + '%';
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  })();
+
+  // TOC scroll-spy
+  (function() {
+    var items = document.querySelectorAll('#toc a');
+    if (!items.length) return;
+    var targets = Array.from(items).map(function(a) {
+      return { a: a, el: document.getElementById(a.getAttribute('href').slice(1)) };
+    }).filter(function(t) { return t.el; });
+    function onScroll() {
+      var y = window.scrollY + 80;
+      var current = targets[0];
+      for (var i = 0; i < targets.length; i++) {
+        if (targets[i].el.offsetTop <= y) current = targets[i];
+      }
+      targets.forEach(function(t) { t.a.parentElement.classList.toggle('active', t === current); });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
   })();
 
   var btn = document.getElementById('themeToggle');
