@@ -4,7 +4,7 @@ Project page and companion blog post for the paper *Convergent Evolution: How Di
 
 - **Project page:** [convergent-evolution.github.io](https://convergent-evolution.github.io/) ([index.html](index.html))
 - **Blog post:** [convergent-evolution.github.io/blog.html](https://convergent-evolution.github.io/blog.html) ([blog.html](blog.html))
-- **Paper:** `arXiv:XXXX.XXXXX` (placeholder — update once posted)
+- **Paper:** [arXiv:2604.20817](https://arxiv.org/abs/2604.20817)
 - **Models:** [Hugging Face collection](https://hf.co/collections/deqing/convergent-evolution)
 
 ## Summary
@@ -36,10 +36,13 @@ Then open [http://localhost:8000](http://localhost:8000). The `.html` files also
 ## Citation
 
 ```bibtex
-@article{fu2026convergent,
-  title   = {Convergent Evolution: How Different Language Models Learn Similar Number Representations},
-  author  = {Fu, Deqing and Zhou, Tianyi and Belkin, Mikhail and Sharan, Vatsal and Jia, Robin},
-  journal = {arXiv preprint arXiv:XXXX.XXXXX},
-  year    = {2026}
+@misc{fu2026convergent,
+  title         = {Convergent Evolution: How Different Language Models Learn Similar Number Representations},
+  author        = {Deqing Fu and Tianyi Zhou and Mikhail Belkin and Vatsal Sharan and Robin Jia},
+  year          = {2026},
+  eprint        = {2604.20817},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2604.20817}
 }
 ```
