@@ -1162,4 +1162,88 @@ body.blog footer { font-family: "Geist", sans-serif; }
     color: #000 !important;
     border: 1px solid #ddd;
   }
+  .visit-counter { display: none !important; }
 }
+
+/* ---------- Visit counter ---------- */
+.visit-counter {
+  margin: 40px 0 24px;
+  padding: 18px 22px;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+.visit-counter.ready {
+  opacity: 1;
+  transform: none;
+}
+.visit-counter.error { display: none; }
+
+.vc-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.vc-label {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--soft);
+}
+.vc-total {
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+.vc-sub {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.vc-sub [data-countries] {
+  font-weight: 600;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.vc-flags {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.vc-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 0.78rem;
+  line-height: 1;
+  color: var(--fg);
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+.vc-flag:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+}
+.vc-flag-emoji {
+  font-size: 0.95rem;
+}
+.vc-flag-n {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
