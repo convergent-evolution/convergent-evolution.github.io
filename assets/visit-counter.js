@@ -2,6 +2,7 @@
   const API_BASE = 'https://cv-counter.deqing1997.workers.dev';
   const SCRIPT_URL =
     (document.currentScript && document.currentScript.src) || '';
+  const SVG_NS = 'http://www.w3.org/2000/svg';
 
   const root = document.getElementById('visit-counter');
   if (!root || API_BASE.includes('YOUR-SUBDOMAIN')) return;
@@ -23,55 +24,73 @@
   }
 
   async function loadDots() {
-    try {
-      const url = SCRIPT_URL
-        ? new URL('world-dots.json', SCRIPT_URL).href
-        : 'assets/world-dots.json';
-      const r = await fetch(url);
-      if (!r.ok) return null;
-      return r.json();
-    } catch (_) {
-      return null;
-    }
+    const url = SCRIPT_URL
+      ? new URL('world-dots.json', SCRIPT_URL).href
+      : 'assets/world-dots.json';
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('dots ' + r.status);
+    return r.json();
+  }
+
+  function svgEl(name, attrs) {
+    const el = document.createElementNS(SVG_NS, name);
+    if (attrs) for (const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
   }
 
   function renderMap(dotData, countries) {
     if (!mapEl || !dotData) return;
-    const { dots } = dotData;
     const hit = new Set(
       Object.keys(countries || {}).filter(
         (cc) => countries[cc] > 0 && cc !== 'XX' && cc !== 'T1'
       )
     );
-    const parts = [
-      '<defs>' +
-        '<linearGradient id="vc-grad" x1="0" y1="0" x2="90" y2="36" gradientUnits="userSpaceOnUse">' +
-        '<stop offset="0" class="vc-g-a"/>' +
-        '<stop offset="1" class="vc-g-b"/>' +
-        '</linearGradient>' +
-        '</defs>',
-    ];
-    for (const [x, y, iso] of dots) {
-      const cls = hit.has(iso) ? ' class="on"' : '';
-      parts.push(
-        '<circle cx="' + (x + 0.5) + '" cy="' + (y + 0.5) + '" r="0.38"' + cls + '/>'
-      );
+    while (mapEl.firstChild) mapEl.removeChild(mapEl.firstChild);
+
+    const defs = svgEl('defs');
+    const grad = svgEl('linearGradient', {
+      id: 'vc-grad',
+      x1: '0', y1: '0', x2: '180', y2: '72',
+      gradientUnits: 'userSpaceOnUse',
+    });
+    grad.appendChild(svgEl('stop', { offset: '0', class: 'vc-g-a' }));
+    grad.appendChild(svgEl('stop', { offset: '1', class: 'vc-g-b' }));
+    defs.appendChild(grad);
+    mapEl.appendChild(defs);
+
+    for (const [x, y, iso] of dotData.dots) {
+      const c = svgEl('circle', {
+        cx: String(x + 0.5),
+        cy: String(y + 0.5),
+        r: '0.4',
+      });
+      if (hit.has(iso)) c.setAttribute('class', 'on');
+      mapEl.appendChild(c);
     }
-    mapEl.innerHTML = parts.join('');
+    root.classList.add('has-map');
   }
 
   (async function () {
+    // /hit is best-effort; never blocks the UI.
+    if (!alreadyHit) {
+      call('/hit', { method: 'POST' }).catch((e) =>
+        console.warn('[visit-counter] /hit failed', e)
+      );
+    }
+    // /stats feeds the total + active-country set. Independent of /hit.
+    let stats = null;
     try {
-      const [dotData] = await Promise.all([
-        loadDots(),
-        alreadyHit ? Promise.resolve() : call('/hit', { method: 'POST' }),
-      ]);
-      const stats = await call('/stats');
+      stats = await call('/stats');
       totalEl.textContent = fmt(stats.total);
-      renderMap(dotData, stats.countries);
-      root.classList.add('ready');
-    } catch (_) {
-      root.classList.add('error');
+    } catch (e) {
+      console.warn('[visit-counter] /stats failed', e);
+    }
+    // Map renders regardless (all dots muted if stats missing).
+    try {
+      const dotData = await loadDots();
+      renderMap(dotData, stats && stats.countries);
+    } catch (e) {
+      console.warn('[visit-counter] map failed', e);
     }
   })();
 })();

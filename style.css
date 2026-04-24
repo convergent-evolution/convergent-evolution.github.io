@@ -1171,12 +1171,8 @@ body.blog footer { font-family: "Geist", sans-serif; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  opacity: 0;
-  transition: opacity 280ms ease;
+  gap: 10px;
 }
-.visit-counter.ready { opacity: 1; }
-.visit-counter.error { display: none; }
 .vc-line {
   display: inline-flex;
   align-items: baseline;
@@ -1199,18 +1195,25 @@ body.blog footer { font-family: "Geist", sans-serif; }
   -webkit-text-fill-color: transparent;
 }
 .visit-map {
-  width: 100%;
-  max-width: 320px;
-  height: auto;
+  width: 480px;
+  max-width: 100%;
+  aspect-ratio: 180 / 72;
   display: block;
   overflow: visible;
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+.visit-counter.has-map .visit-map {
+  opacity: 1;
 }
 .visit-map circle {
-  fill: var(--border);
-  transition: fill 400ms ease;
+  fill: var(--soft);
+  fill-opacity: 0.35;
+  transition: fill 400ms ease, fill-opacity 400ms ease;
 }
 .visit-map circle.on {
   fill: url(#vc-grad);
+  fill-opacity: 1;
 }
 .visit-map stop.vc-g-a { stop-color: var(--accent); }
 .visit-map stop.vc-g-b { stop-color: var(--accent2); }
