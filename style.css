@@ -1167,17 +1167,22 @@ body.blog footer { font-family: "Geist", sans-serif; }
 
 /* ---------- Visit counter ---------- */
 .visit-counter {
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-  font-size: 0.85rem;
-  color: var(--muted);
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   opacity: 0;
   transition: opacity 280ms ease;
 }
 .visit-counter.ready { opacity: 1; }
 .visit-counter.error { display: none; }
+.vc-line {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.85rem;
+}
 .vc-label {
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1193,4 +1198,20 @@ body.blog footer { font-family: "Geist", sans-serif; }
           background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+.visit-map {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.visit-map circle {
+  fill: var(--border);
+  transition: fill 400ms ease;
+}
+.visit-map circle.on {
+  fill: url(#vc-grad);
+}
+.visit-map stop.vc-g-a { stop-color: var(--accent); }
+.visit-map stop.vc-g-b { stop-color: var(--accent2); }
 
