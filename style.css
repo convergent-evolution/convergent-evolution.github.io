@@ -1217,4 +1217,33 @@ body.blog footer { font-family: "Geist", sans-serif; }
 }
 .visit-map stop.vc-g-a { stop-color: var(--accent); }
 .visit-map stop.vc-g-b { stop-color: var(--accent2); }
+.vc-flags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 480px;
+}
+.vc-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 0.76rem;
+  line-height: 1;
+  color: var(--fg);
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+.vc-flag:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+}
+.vc-flag-emoji { font-size: 0.95rem; }
+.vc-flag-n {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
 

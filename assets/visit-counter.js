@@ -9,6 +9,7 @@
 
   const totalEl = root.querySelector('[data-total]');
   const mapEl = root.querySelector('[data-map]');
+  const flagsEl = root.querySelector('[data-flags]');
 
   const SEEN_KEY = 'cv_visit_day';
   const today = new Date().toISOString().slice(0, 10);
@@ -30,6 +31,32 @@
     const r = await fetch(url);
     if (!r.ok) throw new Error('dots ' + r.status);
     return r.json();
+  }
+
+  function flagEmoji(cc) {
+    if (!cc || cc.length !== 2 || cc === 'XX' || cc === 'T1') return '🌐';
+    const base = 0x1F1E6;
+    return String.fromCodePoint(
+      base + cc.charCodeAt(0) - 65,
+      base + cc.charCodeAt(1) - 65
+    );
+  }
+
+  function renderFlags(countries) {
+    if (!flagsEl) return;
+    const entries = Object.entries(countries || {})
+      .filter(([cc, n]) => n > 0 && cc && cc !== 'XX' && cc !== 'T1')
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12);
+    flagsEl.innerHTML = entries
+      .map(
+        ([cc, n]) =>
+          '<span class="vc-flag" title="' + cc + ': ' + fmt(n) + '">' +
+          '<span class="vc-flag-emoji">' + flagEmoji(cc) + '</span>' +
+          '<span class="vc-flag-n">' + fmt(n) + '</span>' +
+          '</span>'
+      )
+      .join('');
   }
 
   function svgEl(name, attrs) {
@@ -82,6 +109,7 @@
     try {
       stats = await call('/stats');
       totalEl.textContent = fmt(stats.total);
+      renderFlags(stats.countries);
     } catch (e) {
       console.warn('[visit-counter] /stats failed', e);
     }
